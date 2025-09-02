@@ -8,6 +8,9 @@
 // MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 // See the Mulan PSL v2 for more details.
 
+`include "apb4_if.svh"
+
+`ifndef __VERILOG__
 interface apb4_if #(
     parameter int APB_ADDR_WIDTH = 32,
     parameter int APB_DATA_WIDTH = 32
@@ -58,3 +61,4 @@ interface apb4_if #(
   );
 
 endinterface
+`endif
