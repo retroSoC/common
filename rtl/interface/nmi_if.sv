@@ -8,11 +8,7 @@
 // MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 // See the Mulan PSL v2 for more details.
 
-interface nmi_if (
-    input logic clk,
-    input logic rstn
-);
-
+interface nmi_if ();
   logic        valid;
   logic [31:0] addr;
   logic [31:0] wdata;
@@ -20,26 +16,7 @@ interface nmi_if (
   logic [31:0] rdata;
   logic        ready;
 
-  modport slave(
-      input clk,
-      input rstn,
-      input valid,
-      input addr,
-      input wdata,
-      input wstrb,
-      output rdata,
-      output ready
-  );
-
-  modport master(
-      input clk,
-      input rstn,
-      output valid,
-      output addr,
-      output wdata,
-      output wstrb,
-      input rdata,
-      input ready
-  );
+  modport slave(input valid, input addr, input wdata, input wstrb, output rdata, output ready);
+  modport master(output valid, output addr, output wdata, output wstrb, input rdata, input ready);
 
 endinterface
