@@ -11,11 +11,11 @@
 module gray2bin #(
     parameter int DATA_WIDTH = 1
 ) (
-    input logic [DATA_WIDTH-1:0] gray_i,
-    input logic [DATA_WIDTH-1:0] bin_o
+    input  logic [DATA_WIDTH-1:0] gray_i,
+    output logic [DATA_WIDTH-1:0] bin_o
 );
 
-    for (genvar i = 0; i < DATA_WIDTH; i++) begin
-      assign bin_o[i] = ^gray_i[DATA_WIDTH-1:i];
-    end
+  for (genvar i = 0; i < DATA_WIDTH; i++) begin
+    assign bin_o[i] = ^gray_i[DATA_WIDTH-1:i];
+  end
 endmodule
