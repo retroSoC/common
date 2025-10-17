@@ -17,13 +17,13 @@ module fifo #(
     input  logic                      clk_i,
     input  logic                      rst_n_i,
     input  logic                      flush_i,
-    output logic                      full_o,
-    output logic                      empty_o,
-    output logic [LOG_BUFFER_DEPTH:0] cnt_o,
-    input  logic [    DATA_WIDTH-1:0] dat_i,
     input  logic                      push_i,
+    output logic                      full_o,
+    input  logic [    DATA_WIDTH-1:0] dat_i,
+    input  logic                      pop_i,
+    output logic                      empty_o,
     output logic [    DATA_WIDTH-1:0] dat_o,
-    input  logic                      pop_i
+    output logic [LOG_BUFFER_DEPTH:0] cnt_o
 );
 
   logic [LOG_BUFFER_DEPTH - 1:0] s_rd_ptr_d, s_rd_ptr_q, s_wr_ptr_d, s_wr_ptr_q;
