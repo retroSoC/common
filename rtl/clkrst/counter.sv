@@ -20,7 +20,7 @@
 // MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 // See the Mulan PSL v2 for more details.
 
-module counter #(
+module rs_counter #(
     parameter int DATA_WIDTH = 4
 ) (
     input  logic                  clk_i,
@@ -34,7 +34,7 @@ module counter #(
     output logic                  ovf_o
 );
 
-  delta_counter #(DATA_WIDTH) u_delta_counter (
+  rs_delta_counter #(DATA_WIDTH) u_delta_counter (
       .clk_i,
       .rst_n_i,
       .clr_i,
@@ -48,7 +48,7 @@ module counter #(
   );
 endmodule
 
-module delta_counter #(
+module rs_delta_counter #(
     parameter int DATA_WIDTH = 4
 ) (
     input  logic                  clk_i,
