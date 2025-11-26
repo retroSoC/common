@@ -199,14 +199,15 @@ module dfferh #(
 endmodule
 
 module dfferc #(
-    parameter int                    DATA_WIDTH = 1,
-    parameter logic [DATA_WIDTH-1:0] RESET_VAL  = '0
+    parameter int      DATA_WIDTH = 1,
+    parameter type     REG_TYPE   = logic [DATA_WIDTH-1:0],
+    parameter REG_TYPE RESET_VAL  = '0
 ) (
-    input  logic                  clk_i,
-    input  logic                  rst_n_i,
-    input  logic                  en_i,
-    input  logic [DATA_WIDTH-1:0] dat_i,
-    output logic [DATA_WIDTH-1:0] dat_o
+    input  logic    clk_i,
+    input  logic    rst_n_i,
+    input  logic    en_i,
+    input  REG_TYPE dat_i,
+    output REG_TYPE dat_o
 );
 
   always_ff @(posedge clk_i, negedge rst_n_i) begin
