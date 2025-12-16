@@ -26,7 +26,7 @@ module lfsr_galois #(
     if (i == DATA_WIDTH - 1) begin : LFSR_GALOIS_LAST_BLOCK
       assign s_shift_d[i] = wr_i ? dat_i[i] : s_shift_q[0];
     end else begin : LFSR_GALOIS_NLAST_BLOCK
-      if (POLY & (1 << i)) begin : LFSR_GALOIS_HVALUE_BLOCK
+      if (|(POLY & (1 << i))) begin : LFSR_GALOIS_HVALUE_BLOCK
         assign s_shift_d[i] = wr_i ? dat_i[i] : s_shift_q[i+1] ^ s_shift_q[0];
       end else begin : LFSR_GALOIS_NHVALUE_BLOCK
         assign s_shift_d[i] = wr_i ? dat_i[i] : s_shift_q[i+1];
