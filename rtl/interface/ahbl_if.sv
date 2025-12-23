@@ -20,7 +20,7 @@ interface ahbl_if (
   logic [ 2:0] hburst;
   logic [ 3:0] hprot;
   logic [ 1:0] htrans;
-  logic        hmastrlock;
+  logic        hmastlock;
   logic [31:0] hwdata;
   logic        hready;
   logic        hresp;
@@ -36,7 +36,7 @@ interface ahbl_if (
       input hburst,
       input hprot,
       input htrans,
-      input hmastrlock,
+      input hmastlock,
       input hwdata,
       output hready,
       output hresp,
@@ -53,7 +53,7 @@ interface ahbl_if (
       output hburst,
       output hprot,
       output htrans,
-      output hmastrlock,
+      output hmastlock,
       output hwdata,
       input hready,
       input hresp,
