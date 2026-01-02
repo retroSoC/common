@@ -53,14 +53,14 @@ module cdc_sync_det #(
 
   logic [DATA_WIDTH-1:0] s_sync_dat[0:STAGE-1];
   for (genvar i = 0; i < STAGE; i++) begin : CDC_SYNC_DET_BLOCK
-    if (i == 0) begin
+    if (i == 0) begin : CDC_SYNC_DET_0_BLOCK
       dffr #(DATA_WIDTH) u_sync_dffr (
           clk_i,
           rst_n_i,
           dat_i,
           s_sync_dat[0]
       );
-    end else begin
+    end else begin : CDC_SYNC_DET_N0_BLOCK
       dffr #(DATA_WIDTH) u_sync_dffr (
           clk_i,
           rst_n_i,
