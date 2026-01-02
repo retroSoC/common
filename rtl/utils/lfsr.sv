@@ -1,4 +1,4 @@
-// Copyright (c) 2023-2025 Yuchi Miao <miaoyuchi@ict.ac.cn>
+// Copyright (c) 2023-2026 Yuchi Miao <miaoyuchi@ict.ac.cn>
 // common is licensed under Mulan PSL v2.
 // You can use this software according to the terms and conditions of the Mulan PSL v2.
 // You may obtain a copy of Mulan PSL v2 at:
@@ -22,7 +22,7 @@ module lfsr_galois #(
 );
 
   logic [DATA_WIDTH-1:0] s_shift_d, s_shift_q;
-  for (genvar i = 0; i < DATA_WIDTH; i++) begin
+  for (genvar i = 0; i < DATA_WIDTH; i++) begin : LFSR_GALOIS_BLOCK
     if (i == DATA_WIDTH - 1) begin : LFSR_GALOIS_LAST_BLOCK
       assign s_shift_d[i] = wr_i ? dat_i[i] : s_shift_q[0];
     end else begin : LFSR_GALOIS_NLAST_BLOCK

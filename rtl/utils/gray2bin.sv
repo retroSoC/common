@@ -1,4 +1,4 @@
-// Copyright (c) 2023-2025 Yuchi Miao <miaoyuchi@ict.ac.cn>
+// Copyright (c) 2023-2026 Yuchi Miao <miaoyuchi@ict.ac.cn>
 // common is licensed under Mulan PSL v2.
 // You can use this software according to the terms and conditions of the Mulan PSL v2.
 // You may obtain a copy of Mulan PSL v2 at:
@@ -15,7 +15,7 @@ module gray2bin #(
     output logic [DATA_WIDTH-1:0] bin_o
 );
 
-  for (genvar i = 0; i < DATA_WIDTH; i++) begin
+  for (genvar i = 0; i < DATA_WIDTH; i++) begin : GRAY2BIN_BLOCK
     assign bin_o[i] = ^gray_i[DATA_WIDTH-1:i];
   end
 endmodule
