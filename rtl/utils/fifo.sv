@@ -35,7 +35,7 @@ module fifo #(
   assign pop_hdshk  = pop_i & ~empty_o;
   assign cnt_o      = s_cnt_q;
   assign empty_o    = s_cnt_q == 0;
-  assign full_o     = s_cnt_q == BUFFER_DEPTH;
+  assign full_o     = s_cnt_q == (LOG_BUFFER_DEPTH + 1)'(BUFFER_DEPTH);
   assign dat_o      = s_mem_q[s_rd_ptr_q];
 
   always_comb begin
