@@ -147,7 +147,7 @@ module clk_int_div_simple #(
   assign div_ready_o   = 1'b1;
   assign div_hdshk     = div_valid_i & div_ready_o;
   assign clk_cnt_o     = s_cnt_q;
-  assign clk_fir_trg_o = div_i == '0 ? '0 : s_cnt_q == DIV_VALUE_WIDTH'((div_i - 1) / 2);
+  assign clk_fir_trg_o = div_i == '0 ? '0 : s_cnt_q == (div_i - DIV_VALUE_WIDTH'(1)) / DIV_VALUE_WIDTH'(2);
   assign clk_sec_trg_o = s_cnt_q == div_i;
 
   always_comb begin
