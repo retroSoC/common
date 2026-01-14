@@ -34,7 +34,7 @@ module dffr #(
 
   always_ff @(posedge clk_i, negedge rst_n_i) begin
     if (~rst_n_i) begin
-      dat_o <= '0;
+      dat_o <= #`REGISTER_DELAY '0;
     end else begin
       dat_o <= #`REGISTER_DELAY dat_i;
     end
@@ -52,7 +52,7 @@ module ndffr #(
 
   always_ff @(negedge clk_i, negedge rst_n_i) begin
     if (~rst_n_i) begin
-      dat_o <= '0;
+      dat_o <= #`REGISTER_DELAY '0;
     end else begin
       dat_o <= #`REGISTER_DELAY dat_i;
     end
@@ -70,7 +70,7 @@ module dffrh #(
 
   always_ff @(posedge clk_i, negedge rst_n_i) begin
     if (~rst_n_i) begin
-      dat_o <= '1;
+      dat_o <= #`REGISTER_DELAY '1;
     end else begin
       dat_o <= #`REGISTER_DELAY dat_i;
     end
@@ -89,7 +89,7 @@ module dffrc #(
 
   always_ff @(posedge clk_i, negedge rst_n_i) begin
     if (~rst_n_i) begin
-      dat_o <= RESET_VAL;
+      dat_o <= #`REGISTER_DELAY RESET_VAL;
     end else begin
       dat_o <= #`REGISTER_DELAY dat_i;
     end
@@ -107,7 +107,7 @@ module dffsr #(
 
   always_ff @(posedge clk_i) begin
     if (~rst_n_i) begin
-      dat_o <= '0;
+      dat_o <= #`REGISTER_DELAY '0;
     end else begin
       dat_o <= #`REGISTER_DELAY dat_i;
     end
@@ -152,7 +152,7 @@ module dffer #(
 
   always_ff @(posedge clk_i, negedge rst_n_i) begin
     if (~rst_n_i) begin
-      dat_o <= '0;
+      dat_o <= #`REGISTER_DELAY '0;
     end else if (en_i) begin
       dat_o <= #`REGISTER_DELAY dat_i;
     end
@@ -181,7 +181,7 @@ module dfferh #(
 
   always_ff @(posedge clk_i, negedge rst_n_i) begin
     if (~rst_n_i) begin
-      dat_o <= '1;
+      dat_o <= #`REGISTER_DELAY '1;
     end else if (en_i) begin
       dat_o <= #`REGISTER_DELAY dat_i;
     end
@@ -211,7 +211,7 @@ module dfferc #(
 
   always_ff @(posedge clk_i, negedge rst_n_i) begin
     if (~rst_n_i) begin
-      dat_o <= RESET_VAL;
+      dat_o <= #`REGISTER_DELAY RESET_VAL;
     end else if (en_i) begin
       dat_o <= #`REGISTER_DELAY dat_i;
     end
@@ -241,7 +241,7 @@ module dffercn #(
 
   always_ff @(posedge clk_i, negedge rst_n_i) begin
     if (~rst_n_i) begin
-      dat_o <= RESET_VAL;
+      dat_o <= #`REGISTER_DELAY RESET_VAL;
     end else if (en_i) begin
       dat_o <= #`REGISTER_DELAY dat_i;
     end
@@ -270,7 +270,7 @@ module dffesr #(
 
   always_ff @(posedge clk_i) begin
     if (~rst_n_i) begin
-      dat_o <= '0;
+      dat_o <= #`REGISTER_DELAY '0;
     end else if (en_i) begin
       dat_o <= #`REGISTER_DELAY dat_i;
     end
