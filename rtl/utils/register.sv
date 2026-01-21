@@ -230,7 +230,7 @@ endmodule
 
 module dffercn #(
     parameter type     REG_TYPE,
-    parameter REG_TYPE RESET_VAL  = '0
+    parameter REG_TYPE RESET_VAL = '0
 ) (
     input  logic    clk_i,
     input  logic    rst_n_i,
@@ -284,5 +284,48 @@ module dffesr #(
       en_i
   );
 `endif
+
+endmodule
+
+module dfferm #(
+    parameter int                  DATA_NUM   = 2,
+    parameter int                  DATA_WIDTH = 1,
+    parameter     [DATA_WIDTH-1:0] INIT_VAL   = '1
+) (
+    input  logic                  clk_i,
+    input  logic                  rst_n_i,
+    input  logic [  DATA_NUM-1:0] en_i,
+    input  logic [DATA_WIDTH-1:0] dat_i  [0:DATA_NUM-1],
+    output logic [DATA_WIDTH-1:0] dat_o  [0:DATA_NUM-1]
+);
+
+  for (genvar i = 0; i < DATA_NUM; i++) begin : DFFERM_BLOCK
+    if (i == 0) begin: DFFERM_FIRST_BLOCK
+      always_ff @(posedge clk_i, negedge rst_n_i) begin
+        if (~rst_n_i) begin
+          dat_o[i] <= #`REGISTER_DELAY INIT_VAL;
+        end else if (en_i[i]) begin
+          dat_o[i] <= #`REGISTER_DELAY dat_i[i];
+        end
+      end
+    end else begin: DFFERM_OTHER_BLOCK
+      always_ff @(posedge clk_i, negedge rst_n_i) begin
+        if (~rst_n_i) begin
+          dat_o[i] <= #`REGISTER_DELAY '0;
+        end else if (en_i[i]) begin
+          dat_o[i] <= #`REGISTER_DELAY dat_i[i];
+        end
+      end
+    end
+
+`ifndef SV_ASSRT_DISABLE
+    xchecker #(
+        .DATA_WIDTH(1)
+    ) u_xchecker (
+        clk_i,
+        en_i[i]
+    );
+`endif
+  end
 
 endmodule
