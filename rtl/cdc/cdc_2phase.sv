@@ -157,13 +157,13 @@ module cdc_2phase_dst #(
   // The req_dst and req registers act as synchronization stages.
   always_ff @(posedge clk_i or negedge rst_n_i) begin
     if (!rst_n_i) begin
-      r_req_dst_q <= #`REGISTER_DELAY '0;
-      r_req_q0    <= #`REGISTER_DELAY '0;
-      r_req_q1    <= #`REGISTER_DELAY '0;
+      r_req_dst_q <= '0;
+      r_req_q0    <= '0;
+      r_req_q1    <= '0;
     end else begin
-      r_req_dst_q <= #`REGISTER_DELAY async_req_i;
-      r_req_q0    <= #`REGISTER_DELAY r_req_dst_q;
-      r_req_q1    <= #`REGISTER_DELAY r_req_q0;
+      r_req_dst_q <= async_req_i;
+      r_req_q0    <= r_req_dst_q;
+      r_req_q1    <= r_req_q0;
     end
   end
 

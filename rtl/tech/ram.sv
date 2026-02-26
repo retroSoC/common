@@ -30,9 +30,9 @@ module tech_ram #(
   logic [BIT_WIDTH-1:0] r_intern_ram[0:WORD_DEPTH-1];
   always_ff @(posedge clk_i) begin
     if (~en_i && ~wen_i) begin
-      r_intern_ram[addr_i] <= #`REGISTER_DELAY dat_i;
+      r_intern_ram[addr_i] <= dat_i;
     end else begin
-      dat_o <= #`REGISTER_DELAY (~en_i && wen_i) ? r_intern_ram[addr_i] : {(BIT_WIDTH / 32) {$random}};
+      dat_o <= (~en_i && wen_i) ? r_intern_ram[addr_i] : {(BIT_WIDTH / 32) {$random}};
     end
   end
 `endif
@@ -63,9 +63,9 @@ module tech_ram_bm #(
 
   always_ff @(posedge clk_i) begin
     if (~en_i && ~wen_i) begin
-      r_intern_ram[addr_i] <= #`REGISTER_DELAY s_dat_i;
+      r_intern_ram[addr_i] <= s_dat_i;
     end else begin
-      dat_o <= #`REGISTER_DELAY (~en_i && wen_i) ? r_intern_ram[addr_i] : {(BIT_WIDTH / 32) {$random}};
+      dat_o <= (~en_i && wen_i) ? r_intern_ram[addr_i] : {(BIT_WIDTH / 32) {$random}};
     end
   end
 `endif
