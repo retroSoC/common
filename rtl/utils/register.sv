@@ -229,7 +229,7 @@ module dfferc #(
 endmodule
 
 module dffercn #(
-    parameter type     REG_TYPE,
+    parameter type     REG_TYPE  = logic,
     parameter REG_TYPE RESET_VAL = '0
 ) (
     input  logic    clk_i,
