@@ -8,7 +8,7 @@
 // MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 // See the Mulan PSL v2 for more details.
 
-interface nmi_if ();
+interface rib_if ();
   logic        valid;
   logic [31:0] addr;
   logic [31:0] wdata;
