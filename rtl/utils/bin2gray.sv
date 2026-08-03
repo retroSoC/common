@@ -11,9 +11,13 @@
 module bin2gray #(
     parameter int DATA_WIDTH = 1
 ) (
-    input logic [DATA_WIDTH-1:0] bin_i,
-    input logic [DATA_WIDTH-1:0] gray_o
+    input  logic [DATA_WIDTH-1:0] bin_i,
+    output logic [DATA_WIDTH-1:0] gray_o
 );
+
+  initial begin
+    if (DATA_WIDTH < 1) $fatal(1, "bin2gray: DATA_WIDTH must be positive");
+  end
 
   assign gray_o = bin_i ^ (bin_i >> 1);
 endmodule

@@ -1,1 +1,8 @@
-build
+build/
+*.vcd
+*.fst
+*.log
+formal/*/engine_*
+formal/*/model/
+formal/fifo/
+formal/arbiter/

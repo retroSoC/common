@@ -8,6 +8,7 @@
 // this License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
+// SPDX-License-Identifier: SHL-0.51
 //
 // Fabian Schuiki <fschuiki@iis.ee.ethz.ch>
 // Florian Zaruba <zarubaf@iis.ee.ethz.ch>
@@ -50,6 +51,15 @@ module cdc_fifo #(
   logic [BUFFER_DEPTH-1:0][DATA_WIDTH-1:0] s_int_mem;
   logic [LOG_BUFFER_DEPTH:0] s_wr_ptr_gray, s_rd_ptr_gray;
 
+  initial begin
+    if (DATA_WIDTH < 1 || BUFFER_DEPTH < 2 || (BUFFER_DEPTH & (BUFFER_DEPTH - 1)) != 0) begin
+      $fatal(1, "cdc_fifo: BUFFER_DEPTH must be a power of two and at least two");
+    end
+    if (SYNC_STAGES < 2) begin
+      $fatal(1, "cdc_fifo: SYNC_STAGES must be at least two");
+    end
+  end
+
   cdc_fifo_src #(DATA_WIDTH, BUFFER_DEPTH, SYNC_STAGES) u_cdc_fifo_src (
                   .clk_i         (src_clk_i),
                   .rst_n_i       (src_rst_n_i),
@@ -58,7 +68,7 @@ module cdc_fifo #(
                   .ready_o       (src_ready_o),
       (* async *) .async_data_o  (s_int_mem),
       (* async *) .async_wr_ptr_o(s_wr_ptr_gray),
-      (* async *) .async_rd_ptr_i(s_rd_ptr_gray),
+      (* async *) .async_rd_ptr_i(s_rd_ptr_gray)
   );
 
   cdc_fifo_dst #(DATA_WIDTH, BUFFER_DEPTH, SYNC_STAGES) u_cdc_fifo_dst (
@@ -69,7 +79,7 @@ module cdc_fifo #(
                   .ready_i       (dst_ready_i),
       (* async *) .async_data_i  (s_int_mem),
       (* async *) .async_wr_ptr_i(s_wr_ptr_gray),
-      (* async *) .async_rd_ptr_o(s_rd_ptr_gray),
+      (* async *) .async_rd_ptr_o(s_rd_ptr_gray)
   );
 endmodule
 
@@ -108,10 +118,11 @@ module cdc_fifo_src #(
   assign async_wr_ptr_o = s_wr_ptr_gray_q;
 
   for (genvar i = 0; i < BUFFER_DEPTH; i++) begin : CDC_FIFO_SRC_DATA
+    localparam logic [LOG_BUFFER_DEPTH-1:0] DATA_INDEX = i;
     dffer #(DATA_WIDTH) u_data_dffer (
         clk_i,
         rst_n_i,
-        s_hdshk && (s_wr_ptr_bin[LOG_BUFFER_DEPTH-1:0] == i),
+        s_hdshk && (s_wr_ptr_bin[LOG_BUFFER_DEPTH-1:0] == DATA_INDEX),
         data_i,
         s_data[i]
     );
@@ -140,9 +151,11 @@ module cdc_fifo_src #(
   );
 
   assign s_wr_ptr_bin_nxt = s_wr_ptr_bin + 1'b1;
-  bin2gray #(PTR_WIDTH) u_wr_ptr_b2g (
-      s_wr_ptr_bin_nxt,
-      s_wr_ptr_gray_d
+  bin2gray #(
+      .DATA_WIDTH(PTR_WIDTH)
+  ) u_wr_ptr_b2g (
+      .bin_i (s_wr_ptr_bin_nxt),
+      .gray_o(s_wr_ptr_gray_d)
   );
 
   dffer #(PTR_WIDTH) u_wr_ptr_gray_dffer (
@@ -211,9 +224,11 @@ module cdc_fifo_dst #(
   );
 
   assign s_rd_ptr_bin_nxt = s_rd_ptr_bin + 1'b1;
-  bin2gray #(PTR_WIDTH) u_rd_ptr_b2g (
-      s_rd_ptr_bin_nxt,
-      s_rd_ptr_gray_d
+  bin2gray #(
+      .DATA_WIDTH(PTR_WIDTH)
+  ) u_rd_ptr_b2g (
+      .bin_i (s_rd_ptr_bin_nxt),
+      .gray_o(s_rd_ptr_gray_d)
   );
 
   dffer #(PTR_WIDTH) u_rd_ptr_gray_dffer (

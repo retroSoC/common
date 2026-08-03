@@ -1,12 +1,7 @@
 // Copyright (c) 2023-2026 Yuchi Miao <miaoyuchi@ict.ac.cn>
-// common is licensed under Mulan PSL v2.
-// You can use this software according to the terms and conditions of the Mulan PSL v2.
-// You may obtain a copy of Mulan PSL v2 at:
-//             http://license.coscl.org.cn/MulanPSL2
-// THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-// EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-// MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-// See the Mulan PSL v2 for more details.
+// SPDX-License-Identifier: MulanPSL-2.0
+// Computes the next address within the 4 KiB AXI page represented by addr_i.
+// The caller is responsible for rejecting bursts that cross the page boundary.
 
 `include "axi4_define.svh"
 
@@ -17,37 +12,33 @@ module axi4_addr_gen (
     input  logic [`AXI4_ADDR_OFT_WIDTH-1:0] addr_i,
     output logic [`AXI4_ADDR_OFT_WIDTH-1:0] addr_o
 );
-
-  logic [`AXI4_ADDR_OFT_WIDTH-1:0] s_offset_addr, s_inc_addr, s_wrap_addr;
-  logic [`AXI4_ADDR_OFT_WIDTH-1:0] s_mux_addr, s_res_addr;
-
-  // max 64 bits
-  always_comb begin
-    s_offset_addr = '0;
-    unique case (asize_i)
-      `AXI4_BURST_SIZE_1BYTE:     s_offset_addr = addr_i[`AXI4_ADDR_OFT_WIDTH-1:0];
-      `AXI4_BURST_SIZE_2BYTES:    s_offset_addr = {1'b0, addr_i[`AXI4_ADDR_OFT_WIDTH-1:1]};
-      `AXI4_BURST_SIZE_4BYTES:    s_offset_addr = {2'b00, addr_i[`AXI4_ADDR_OFT_WIDTH-1:2]};
-      `AXI4_BURST_SIZE_8BYTES:    s_offset_addr = {3'b000, addr_i[`AXI4_ADDR_OFT_WIDTH-1:3]};
-      default s_offset_addr = '0;
-    endcase
-  end
-
-  assign s_inc_addr = s_offset_addr + 1'b1;
-  assign s_wrap_addr[`AXI4_ADDR_OFT_WIDTH-1:8] = s_offset_addr[`AXI4_ADDR_OFT_WIDTH-1:8];
-  assign s_wrap_addr[7:0] = (alen_i & s_inc_addr[7:0]) | (~alen_i & s_offset_addr[7:0]);
-  assign s_mux_addr = aburst_i == `AXI4_BURST_TYPE_WRAP ? s_wrap_addr : s_inc_addr;
+  localparam int OFFSET_WIDTH = `AXI4_ADDR_OFT_WIDTH;
+  logic [OFFSET_WIDTH-1:0] s_beat_bytes;
+  logic [OFFSET_WIDTH-1:0] s_burst_bytes;
+  logic [OFFSET_WIDTH-1:0] s_next_addr;
+  logic [OFFSET_WIDTH-1:0] s_wrap_mask;
+  logic                    s_wrap_length_valid;
 
   always_comb begin
-    s_res_addr = '0;
-    unique case (asize_i)
-      `AXI4_BURST_SIZE_1BYTE:  s_res_addr = s_mux_addr;
-      `AXI4_BURST_SIZE_2BYTES: s_res_addr = {s_mux_addr[`AXI4_ADDR_OFT_WIDTH-2:0], 1'b0};
-      `AXI4_BURST_SIZE_4BYTES: s_res_addr = {s_mux_addr[`AXI4_ADDR_OFT_WIDTH-3:0], 2'b00};
-      `AXI4_BURST_SIZE_8BYTES: s_res_addr = {s_mux_addr[`AXI4_ADDR_OFT_WIDTH-4:0], 3'b000};
-      default s_res_addr = '0;
+    s_beat_bytes = {{(OFFSET_WIDTH - 1) {1'b0}}, 1'b1} << asize_i;
+    s_next_addr = addr_i + s_beat_bytes;
+    s_wrap_length_valid = (alen_i == 8'd1) || (alen_i == 8'd3) || (alen_i == 8'd7) ||
+        (alen_i == 8'd15);
+    s_burst_bytes = s_beat_bytes * OFFSET_WIDTH'(alen_i + 1'b1);
+    s_wrap_mask = s_burst_bytes - 1'b1;
+
+    case (aburst_i)
+      `AXI4_BURST_TYPE_FIXED: addr_o = addr_i;
+      `AXI4_BURST_TYPE_WRAP: begin
+        // AXI wrap lengths are powers of two, so this is a boundary mask,
+        // not a mask made from AxLEN itself.
+        if (s_wrap_length_valid && s_burst_bytes != '0) begin
+          addr_o = (addr_i & ~s_wrap_mask) | (s_next_addr & s_wrap_mask);
+        end else begin
+          addr_o = s_next_addr;
+        end
+      end
+      default:                addr_o = s_next_addr;
     endcase
   end
-
-  assign addr_o = aburst_i == `AXI4_BURST_TYPE_FIXED ? addr_i : s_res_addr;
 endmodule

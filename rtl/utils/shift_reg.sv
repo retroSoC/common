@@ -39,7 +39,14 @@ module shift_reg #(
   logic [DATA_WIDTH-1:0] s_sf_d, s_sf_q;
   logic s_sf_en;
 
-  assign ser_dat_o  = dir_i == `SHIFT_REG_DIR_RIGHT ? s_sf_q[SHIFT_NUM-1:0] : s_sf_q[DATA_WIDTH-1-:SHIFT_NUM];
+  initial begin
+    if (DATA_WIDTH < 2 || SHIFT_NUM < 1 || SHIFT_NUM > DATA_WIDTH) begin
+      $fatal(1, "shift_reg: require DATA_WIDTH >= 2 and 0 < SHIFT_NUM <= DATA_WIDTH");
+    end
+  end
+
+  assign ser_dat_o = dir_i == `SHIFT_REG_DIR_RIGHT ? s_sf_q[SHIFT_NUM-1:0] :
+      s_sf_q[DATA_WIDTH-1-:SHIFT_NUM];
   assign par_data_o = s_sf_q;
 
   assign s_sf_en = ld_en_i || (dir_i != `SHIFT_REG_DIR_KEEP && sft_en_i);

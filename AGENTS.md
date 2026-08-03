@@ -1,0 +1,57 @@
+# common Contribution Rules
+
+`common` is a self-contained RTL foundation layer. A component under `rtl/`
+may depend only on another component in this repository, never on a technology
+library, SoC repository, or verification package outside this tree.
+
+## Layout
+
+- `rtl/base`, `rtl/stream`, `rtl/bus`, `rtl/clock`, `rtl/cdc`, and `rtl/memory`
+  contain the preferred public components.
+- `rtl/utils`, `rtl/clkrst`, `rtl/tech`, and `rtl/interface` retain compatible
+  interfaces for existing IP. Do not remove or rename these paths without a
+  release-note migration plan.
+- `dv/unit` contains self-checking simulation tests. `formal` contains bounded
+  property checks. Generated artifacts belong under `build/` only.
+
+## RTL Rules
+
+- Use `logic`, `always_comb`, and `always_ff`; give every sequential block an
+  explicit reset policy.
+- Parameter ranges are contracts. Reject invalid geometry or protocol settings
+  with an `initial $fatal` where elaboration cannot enforce them.
+- Handshake components use `*_valid_i`/`*_ready_o` and must define flush,
+  simultaneous transfer, and reset behavior.
+- Multi-bit CDC must use a handshake or asynchronous queue. `cdc_sync` is only
+  for independently encoded controls.
+- New RTL should be built structurally from existing common primitives whenever
+  that does not weaken timing or CDC correctness.
+
+## Required Checks
+
+Run the following before submitting a change:
+
+```sh
+make format-check
+make mk-validate
+make license-check
+make lint
+make test-iverilog
+make test-verilator
+make synth
+make formal
+```
+
+Use `make doctor` to verify local tools. `mbake` version 1.4.6 or newer applies
+the project Makefile policy in `.bake.toml`. Do not commit `build/`, waves, or
+tool-generated netlists. Format only tracked project SystemVerilog and Makefile
+sources. Every tracked SystemVerilog file must declare an SPDX identifier or a
+recognized upstream license in its first 40 lines; run `make license-check` to
+enforce the policy.
+
+## Third-party Material
+
+PULP common_cells-inspired or derived code must keep the original copyright,
+Solderpad Hardware License notice, SPDX tag, and an entry in `NOTICE`. Do not
+reuse upstream `cc_*` component names or identifiers. Code derived from other
+projects follows the same rule and must be recorded in `NOTICE`.

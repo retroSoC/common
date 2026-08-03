@@ -1,0 +1,32 @@
+name: RTL quality
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: YosysHQ/setup-oss-cad-suite@v3
+      - name: Install Makefile formatter
+        run: |
+          python3 -m pip install --user mbake==1.4.6
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Tool inventory
+        run: make doctor
+      - name: License headers
+        run: make license-check
+      - name: Format
+        run: make format-check
+      - name: Lint
+        run: make lint
+      - name: Icarus regression
+        run: make test-iverilog
+      - name: Verilator regression
+        run: make test-verilator
+      - name: Synthesis checks
+        run: make synth
+      - name: Formal checks
+        run: make formal

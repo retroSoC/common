@@ -34,7 +34,7 @@ module apb4_master_model (
 
     @(posedge apb4.pclk);
     apb4.penable = 1'b1;
-    @(posedge apb4.pclk && apb4.pready);
+    do @(posedge apb4.pclk); while (!apb4.pready);
     apb4.paddr   = 'x;
     apb4.psel    = '0;
     apb4.penable = '0;
@@ -51,7 +51,7 @@ module apb4_master_model (
 
     @(posedge apb4.pclk);
     apb4.penable = 1'b1;
-    @(posedge apb4.pclk && apb4.pready);
+    do @(posedge apb4.pclk); while (!apb4.pready);
     apb4.paddr   = 'x;
     apb4.psel    = '0;
     apb4.penable = '0;
@@ -63,7 +63,8 @@ module apb4_master_model (
   task automatic cmp_data(input bit [31:0] addr, input bit [31:0] ref_data);
     read(addr, rd_data);
     if (ref_data != rd_data) begin
-      $display("%t [ERRO]: compare error-> receive: %h, expected: %h", $time, rd_data, ref_data);
+      $fatal(1, "%t apb4 compare error: received %h, expected %h at %h", $time, rd_data, ref_data,
+             addr);
     end
   endtask
 endmodule

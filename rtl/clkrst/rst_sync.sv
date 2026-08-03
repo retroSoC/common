@@ -17,6 +17,12 @@ module rst_sync #(
 );
 
   logic [STAGE-1:0] s_rst_sync;
+
+  initial begin
+    if (STAGE < 2) begin
+      $fatal(1, "rst_sync: STAGE must be at least two");
+    end
+  end
   for (genvar i = 0; i < STAGE; i++) begin : RST_SYNC_BLOCK
     if (i == 0) begin : RST_SYNC_0_BLOCK
       dffr #(1) u_sync_dffr (

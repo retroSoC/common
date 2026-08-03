@@ -7,7 +7,7 @@
 // -- Adaptable modifications are redistributed under compatible License --
 //
 // Copyright (c) 2023-2026 Yuchi Miao <miaoyuchi@ict.ac.cn>
-// archinfo is licensed under Mulan PSL v2.
+// common is licensed under Mulan PSL v2.
 // You can use this software according to the terms and conditions of the Mulan PSL v2.
 // You may obtain a copy of Mulan PSL v2 at:
 //             http://license.coscl.org.cn/MulanPSL2
@@ -36,6 +36,13 @@ module regfield #(
 
   logic                  s_wen;
   logic [DATA_WIDTH-1:0] s_wdata;
+
+  initial begin
+    if (!((SW_ACS == "rw") || (SW_ACS == "wo") || (SW_ACS == "ro") || (SW_ACS == "w1s") ||
+          (SW_ACS == "w1c") || (SW_ACS == "w0c") || (SW_ACS == "rc"))) begin
+      $fatal(1, "regfield: unsupported SW_ACS '%s'", SW_ACS);
+    end
+  end
 
   if ((SW_ACS == "rw") || (SW_ACS == "wo")) begin : gen_w
     assign s_wen   = sw_wen_i | hw_wen_i;

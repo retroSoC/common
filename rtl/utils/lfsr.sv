@@ -12,7 +12,8 @@
 // MSB -> LSB [DATA_WIDTH-1:0]
 module lfsr_galois #(
     parameter int                    DATA_WIDTH = 32,
-    parameter logic [DATA_WIDTH-1:0] POLY       = '0
+    parameter logic [DATA_WIDTH-1:0] POLY       = {{(DATA_WIDTH - 1) {1'b0}}, 1'b1},
+    parameter logic [DATA_WIDTH-1:0] RESET_SEED = {{(DATA_WIDTH - 1) {1'b0}}, 1'b1}
 ) (
     input  logic                  clk_i,
     input  logic                  rst_n_i,
@@ -22,6 +23,11 @@ module lfsr_galois #(
 );
 
   logic [DATA_WIDTH-1:0] s_shift_d, s_shift_q;
+  initial begin
+    if (DATA_WIDTH < 2 || POLY == '0 || RESET_SEED == '0) begin
+      $fatal(1, "lfsr_galois: width, polynomial and reset seed must be non-zero");
+    end
+  end
   for (genvar i = 0; i < DATA_WIDTH; i++) begin : LFSR_GALOIS_BLOCK
     if (i == DATA_WIDTH - 1) begin : LFSR_GALOIS_LAST_BLOCK
       assign s_shift_d[i] = wr_i ? dat_i[i] : s_shift_q[0];
@@ -35,7 +41,7 @@ module lfsr_galois #(
   end
 
   assign dat_o = s_shift_q;
-  dffr #(DATA_WIDTH) u_shift_dffr (
+  dffrc #(DATA_WIDTH, RESET_SEED) u_shift_dffrc (
       clk_i,
       rst_n_i,
       s_shift_d,
@@ -44,8 +50,8 @@ module lfsr_galois #(
 
 endmodule
 
-// due to the delay, more recommand to use galois type lfsr
-// NOTE: this module is no ready for use, need more test
+// Fibonacci form is retained for compatibility. It uses the same non-zero
+// reset requirement as the Galois implementation.
 module lfsr_fibonacci #(
     parameter int DATA_WIDTH = 32,
     parameter int SEED       = 0
@@ -58,6 +64,11 @@ module lfsr_fibonacci #(
 );
 
   logic [DATA_WIDTH-1:0] s_shift_d, s_shift_q;
+  initial begin
+    if (DATA_WIDTH < 2 || SEED == 0) begin
+      $fatal(1, "lfsr_fibonacci: DATA_WIDTH must be at least two and SEED non-zero");
+    end
+  end
 
   assign dat_o = s_shift_q;
   for (genvar i = 0; i <= DATA_WIDTH - 1; i++) begin : LFSR_FIBONACCI_BLOCK

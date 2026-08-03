@@ -1,0 +1,14 @@
+[options]
+mode prove
+depth 24
+
+[engines]
+smtbmc bitwuzla
+
+[script]
+read -formal -sv round_robin_arbiter.sv arbiter_formal.sv
+prep -top arbiter_formal
+
+[files]
+rtl/stream/round_robin_arbiter.sv
+formal/arbiter_formal.sv

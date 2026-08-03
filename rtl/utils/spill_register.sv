@@ -8,6 +8,7 @@
 // this License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
+// SPDX-License-Identifier: SHL-0.51
 //
 // Fabian Schuiki <fschuiki@iis.ee.ethz.ch>
 //
@@ -39,8 +40,8 @@ module spill_register #(
 );
 
   if (BYPASS) begin : SPILL_REG_GEN_BYPASS
-    assign valid_o = valid_i;
-    assign ready_o = ready_i;
+    assign valid_o = valid_i && !flush_i;
+    assign ready_o = ready_i && !flush_i;
     assign data_o  = data_i;
   end else begin : SPILL_REG_GEN_SPILL
     // The A and B register
@@ -77,12 +78,11 @@ module spill_register #(
     // downstream circuit is ready, or if a flush is requested.
     assign s_b_fill  = s_a_drain && (!ready_i) && (!flush_i);
     assign s_b_drain = (r_b_full && ready_i) || flush_i;
-    // We can accept input as long as register B is not full.
-    // Note: flush_i and valid_i must not be high at the same time,
-    // otherwise an invalid handshake may occur
-    assign ready_o   = !r_a_full || !r_b_full;
+    // Flush cancels both sides of a transfer in the current cycle. This makes
+    // flush_i && valid_i well-defined and prevents a phantom handshake.
+    assign ready_o   = (!r_a_full || !r_b_full) && !flush_i;
     // The unit provides output as long as one of the registers is filled.
-    assign valid_o   = r_a_full | r_b_full;
+    assign valid_o   = (r_a_full | r_b_full) && !flush_i;
     // We empty the spill register before the slice register.
     assign data_o    = r_b_full ? r_b_data : r_a_data;
   end

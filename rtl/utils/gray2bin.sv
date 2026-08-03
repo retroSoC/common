@@ -15,6 +15,10 @@ module gray2bin #(
     output logic [DATA_WIDTH-1:0] bin_o
 );
 
+  initial begin
+    if (DATA_WIDTH < 1) $fatal(1, "gray2bin: DATA_WIDTH must be positive");
+  end
+
   for (genvar i = 0; i < DATA_WIDTH; i++) begin : GRAY2BIN_BLOCK
     assign bin_o[i] = ^gray_i[DATA_WIDTH-1:i];
   end

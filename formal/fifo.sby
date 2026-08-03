@@ -1,0 +1,14 @@
+[options]
+mode prove
+depth 24
+
+[engines]
+smtbmc bitwuzla
+
+[script]
+read -formal -sv fifo.sv fifo_formal.sv
+prep -top fifo_formal
+
+[files]
+rtl/utils/fifo.sv
+formal/fifo_formal.sv

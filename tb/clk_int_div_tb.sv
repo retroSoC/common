@@ -1,3 +1,6 @@
+// Copyright (c) 2023-2026 Yuchi Miao <miaoyuchi@ict.ac.cn>
+// SPDX-License-Identifier: MulanPSL-2.0
+
 `timescale 1ns / 1ps
 
 module clk_int_div_simple_tb ();

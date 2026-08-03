@@ -141,18 +141,30 @@ module clk_int_div_simple #(
 
   logic [DIV_VALUE_WIDTH-1:0] s_cnt_d, s_cnt_q;
   logic [DONE_DELAY_WIDTH-1:0] s_div_done_d, s_div_done_q;
+  logic [DIV_VALUE_WIDTH-1:0] s_div_q;
   logic s_clk_d, s_clk_q;
   logic div_hdshk;
 
-  assign div_ready_o   = 1'b1;
-  assign div_hdshk     = div_valid_i & div_ready_o;
-  assign clk_cnt_o     = s_cnt_q;
-  assign clk_fir_trg_o = div_i == '0 ? '0 : s_cnt_q == (div_i - DIV_VALUE_WIDTH'(1)) / DIV_VALUE_WIDTH'(2);
-  assign clk_sec_trg_o = s_cnt_q == div_i;
+  assign div_ready_o = 1'b1;
+  assign div_hdshk = div_valid_i & div_ready_o;
+  assign clk_cnt_o = s_cnt_q;
+  assign clk_fir_trg_o = s_div_q == '0 ? '0 :
+      s_cnt_q == (s_div_q - DIV_VALUE_WIDTH'(1)) / DIV_VALUE_WIDTH'(2);
+  assign clk_sec_trg_o = s_cnt_q == s_div_q;
+
+  // The public input is sampled only on div_valid_i. This prevents a changing
+  // register-bus value from perturbing an in-flight divide period.
+  dffer #(DIV_VALUE_WIDTH) u_div_value_dffer (
+      clk_i,
+      rst_n_i,
+      div_hdshk,
+      div_i,
+      s_div_q
+  );
 
   always_comb begin
     s_cnt_d = s_cnt_q + 1'b1;
-    if (div_hdshk || div_i == '0) s_cnt_d = '0;
+    if (div_hdshk || s_div_q == '0) s_cnt_d = '0;
     else if (clk_sec_trg_o) s_cnt_d = '0;
   end
   dffr #(DIV_VALUE_WIDTH) u_cnt_dffr (
@@ -166,7 +178,7 @@ module clk_int_div_simple #(
   // if div_i == 1, clk_o = clk_i / 2 chg on s_cnt_q == 0
   // if div_i == 2, clk_o = clk_i / 3 chg on s_cnt_q == 0
   // if div_i == 3, clk_o = clk_i / 4 chg on s_cnt_q == 1
-  assign clk_o = div_i == '0 ? clk_i : s_clk_q;
+  assign clk_o = s_div_q == '0 ? clk_i : s_clk_q;
   always_comb begin
     if (div_hdshk) s_clk_d = clk_init_i;
     else if (clk_fir_trg_o || clk_sec_trg_o) s_clk_d = ~s_clk_q;
@@ -209,5 +221,42 @@ module clk_int_even_div #(
     output logic div_done_o,
     output logic clk_o
 );
+  localparam int HALF_PERIOD = DIV_VALUE / 2;
+  localparam int COUNT_WIDTH = (HALF_PERIOD > 1) ? $clog2(HALF_PERIOD) : 1;
+  logic [COUNT_WIDTH-1:0] r_count;
+  logic                   r_clock;
+  logic                   r_divide_enabled;
 
+  initial begin
+    if (DIV_VALUE < 2 || DIV_VALUE % 2 != 0) begin
+      $fatal(1, "clk_int_even_div: DIV_VALUE must be a positive even value");
+    end
+  end
+
+  always_ff @(posedge clk_i or negedge rst_n_i) begin
+    if (!rst_n_i) begin
+      r_count          <= '0;
+      r_clock          <= 1'b0;
+      r_divide_enabled <= ENABLE_CLOCK_IN_RESET;
+      div_done_o       <= 1'b0;
+    end else begin
+      div_done_o <= 1'b0;
+      if (div_valid_i) begin
+        r_count          <= '0;
+        r_clock          <= 1'b0;
+        r_divide_enabled <= div_i;
+        div_done_o       <= 1'b1;
+      end else if (!en_i || !r_divide_enabled) begin
+        r_count <= '0;
+        r_clock <= 1'b0;
+      end else if (r_count == COUNT_WIDTH'(HALF_PERIOD - 1)) begin
+        r_count <= '0;
+        r_clock <= !r_clock;
+      end else begin
+        r_count <= r_count + 1'b1;
+      end
+    end
+  end
+
+  assign clk_o = r_clock;
 endmodule

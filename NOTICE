@@ -1,0 +1,35 @@
+common third-party notices
+==========================
+
+PULP platform common_cells concepts and compatible source material
+---------------------------------------------------------------
+Origin: https://github.com/pulp-platform/common_cells
+License: Solderpad Hardware License, Version 0.51 (SHL-0.51)
+Copyright: ETH Zurich and University of Bologna; individual file notices name
+additional authors.
+
+The following files retain or add the upstream SHL-0.51 notice because their
+architecture is derived from, or materially informed by, PULP common_cells:
+
+- rtl/cdc/cdc_2phase.sv
+- rtl/cdc/cdc_fifo.sv
+- rtl/clkrst/clk_int_div.sv
+- rtl/clkrst/counter.sv
+- rtl/utils/spill_register.sv
+- rtl/stream/round_robin_arbiter.sv
+- rtl/stream/stream_cells.sv
+- rtl/bus/address_decode.sv
+- rtl/cdc/async_reqack.sv
+- rtl/clock/clock_divider.sv
+- rtl/clock/safe_clock_mux.sv
+
+These components were adapted or independently reimplemented to keep common
+self-contained. They intentionally do not expose PULP `cc_*` names or preserve
+upstream signal/variable identifiers. The original copyright and license URL
+remain in the affected source files, which also carry an SHL-0.51 SPDX marker.
+
+lowRISC register field material
+-------------------------------
+Origin: https://github.com/lowRISC/opentitan
+License: Apache License 2.0
+Affected file: rtl/utils/regfield.sv

@@ -1,0 +1,11 @@
+always-comb
+always-comb-blocking
+always-ff-non-blocking=catch_modifying_assignments:false;waive_for_locals:false
+case-missing-default
+forbid-defparam
+forbid-negative-array-dim
+invalid-system-task-function
+no-tabs
+no-trailing-spaces
+suspicious-semicolon
+truncated-numeric-literal

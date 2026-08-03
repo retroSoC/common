@@ -89,8 +89,8 @@ module edge_det_sync #(
       .dat_o  (s_dat_q)
   );
 
-  assign re_o  = (~s_dat_q) & s_dat_d;
-  assign fe_o  = s_dat_q & (~s_dat_d);
+  assign re_o = (~s_dat_q) & s_dat_d;
+  assign fe_o = s_dat_q & (~s_dat_d);
 endmodule
 
 module edge_det_sync_re #(
