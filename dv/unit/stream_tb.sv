@@ -45,7 +45,14 @@ module stream_tb;
   logic [ 7:0]      credit_output_data;
   logic             credit_release;
   logic [ 1:0]      credits;
+  int               replica_transfers    [4];
   always #5 clk = !clk;
+
+  always @(posedge clk) begin
+    for (int port_idx = 0; port_idx < 4; port_idx++) begin
+      if (replica_valid[port_idx] && replica_ready[port_idx]) replica_transfers[port_idx]++;
+    end
+  end
 
   stream_buffer #(
       .DATA_WIDTH(8)
@@ -88,6 +95,9 @@ module stream_tb;
       .DATA_WIDTH(8),
       .PORTS     (4)
   ) u_replicator (
+      .clk_i      (clk),
+      .rst_n_i    (rst_n),
+      .flush_i    (flush),
       .in_valid_i (route_valid),
       .in_ready_o (replica_input_ready),
       .in_data_i  (route_data),
@@ -142,7 +152,7 @@ module stream_tb;
     route_data           = 8'h5a;
     routed_ready         = 4'b0010;
     replica_enable       = 4'b1011;
-    replica_ready        = 4'b1011;
+    replica_ready        = '0;
     collect_valid        = 4'b0101;
     collect_data[0]      = 8'h01;
     collect_data[1]      = 8'h02;
@@ -154,16 +164,47 @@ module stream_tb;
     credit_data          = 8'hc3;
     credit_output_ready  = 1;
     credit_release       = 0;
+    for (int port_idx = 0; port_idx < 4; port_idx++) begin
+      replica_transfers[port_idx] = 0;
+    end
     repeat (2) @(negedge clk);
     rst_n = 1;
     #1;
     if (!mux_valid || mux_data != 8'h30 || selected_ready != 4'b0100) $fatal(1, "selector failed");
     if (!route_ready || routed_valid != 4'b0010 || routed_data[1] != 8'h5a)
       $fatal(1, "router failed");
-    if (!replica_input_ready || replica_valid != 4'b1011 || replica_data[3] != 8'h5a)
-      $fatal(1, "replicator failed");
+    if (!replica_input_ready || replica_valid != '0) $fatal(1, "replicator idle contract failed");
     if (!collect_output_valid || collect_ready != 4'b0101 || collect_output_data != 32'h0403_0201)
       $fatal(1, "collector failed");
+
+    // Targets may consume the stored word in different cycles. Changing the
+    // live input and enable mask after acceptance must not affect the item.
+    route_data     = 8'h5a;
+    route_valid    = 1;
+    replica_enable = 4'b1011;
+    @(negedge clk);
+    route_valid = 0;
+    #1;
+    if (replica_valid != 4'b1011 || replica_data[3] != 8'h5a || replica_input_ready)
+      $fatal(1, "replicator did not retain accepted word");
+    route_data     = 8'hee;
+    replica_enable = '0;
+    replica_ready  = 4'b0010;
+    @(negedge clk);
+    #1;
+    if (replica_valid != 4'b1001 || replica_data[0] != 8'h5a || replica_transfers[1] != 1)
+      $fatal(1, "replicator did not retire first target exactly once");
+    replica_ready = 4'b1000;
+    @(negedge clk);
+    #1;
+    if (replica_valid != 4'b0001 || replica_transfers[3] != 1)
+      $fatal(1, "replicator did not preserve pending targets");
+    replica_ready = 4'b0001;
+    @(negedge clk);
+    #1;
+    if (replica_valid != '0 || !replica_input_ready || replica_transfers[0] != 1 ||
+        replica_transfers[2] != 0 || replica_transfers[3] != 1)
+      $fatal(1, "replicator exact-once contract failed");
     @(negedge clk);
     credit_valid = 1;
     @(negedge clk);

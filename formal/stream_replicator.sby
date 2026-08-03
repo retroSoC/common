@@ -1,0 +1,15 @@
+[options]
+mode prove
+depth 24
+
+[engines]
+smtbmc bitwuzla
+
+[script]
+read -formal -sv stream_cells.sv spill_register.sv stream_replicator_formal.sv
+prep -top stream_replicator_formal
+
+[files]
+rtl/stream/stream_cells.sv
+rtl/utils/spill_register.sv
+formal/stream_replicator_formal.sv

@@ -11,8 +11,19 @@ module clock_tb;
   logic       divided_clk;
   logic [3:0] count;
   int         rising_edges;
+  logic       clk0 = 0;
+  logic       clk1 = 0;
+  logic       mux_select;
+  logic       mux_clk;
+  int         mux_rising_edges;
   always #2 clk = !clk;
+  always #3 clk0 = !clk0;
+  always #5 clk1 = !clk1;
   always @(posedge divided_clk) rising_edges++;
+  always @(posedge mux_clk) begin
+    if (!clk0 && !clk1) $fatal(1, "clock mux generated a non-source edge");
+    mux_rising_edges++;
+  end
 
   clock_divider #(
       .DIV_WIDTH(4),
@@ -27,12 +38,21 @@ module clock_tb;
       .clk_o      (divided_clk),
       .count_o    (count)
   );
+  safe_clock_mux u_mux (
+      .clk0_i  (clk0),
+      .clk1_i  (clk1),
+      .rst_n_i (rst_n),
+      .select_i(mux_select),
+      .clk_o   (mux_clk)
+  );
 
   initial begin
-    enable        = 0;
-    divisor       = 2;
-    divisor_valid = 0;
-    rising_edges  = 0;
+    enable           = 0;
+    divisor          = 2;
+    divisor_valid    = 0;
+    rising_edges     = 0;
+    mux_select       = 0;
+    mux_rising_edges = 0;
     repeat (2) @(negedge clk);
     rst_n  = 1;
     enable = 1;
@@ -49,6 +69,11 @@ module clock_tb;
     enable = 0;
     @(negedge clk);
     if (divided_clk) $fatal(1, "disabled divider must be low");
+    repeat (8) @(posedge clk0);
+    if (mux_rising_edges == 0) $fatal(1, "clock mux did not select clk0");
+    mux_select = 1;
+    repeat (12) @(posedge clk1);
+    if (mux_rising_edges < 2) $fatal(1, "clock mux did not complete handover");
     $display("[PASS] clock_tb");
     $finish;
   end

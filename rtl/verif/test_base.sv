@@ -10,9 +10,7 @@
 
 class TestBase;
   string name;
-  extern function new(string name = "test_base");
+  function new(string name = "test_base");
+    this.name = name;
+  endfunction
 endclass
-
-function TestBase::new(string name);
-  this.name = name;
-endfunction

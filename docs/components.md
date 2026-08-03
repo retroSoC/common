@@ -8,7 +8,10 @@
 - `bypass_buffer`, `stream_buffer`, `stream_selector`, `stream_router`,
   `stream_replicator`, `stream_collector`, and `stream_credit_limiter` use a
   conventional valid/ready transfer. A transfer occurs only when both signals
-  are high in the same cycle.
+  are high in the same cycle. `stream_replicator` retains one accepted payload
+  and target mask, so enabled outputs may complete in different cycles but
+  each receives exactly one transfer. Its input is backpressured until all
+  selected targets complete; `flush_i` cancels the retained item.
 - `fifo` and its legacy `stream_fifo` wrapper are power-of-two synchronous
   queues. A full queue may push and pop on the same edge. Their asynchronous
   read contract maps to registers in generic Yosys synthesis; use a technology
@@ -17,20 +20,29 @@
 ## CDC and reset
 
 - `cdc_sync` is for control bits or independently encoded vectors only.
-- `async_reqack` is a one-entry four-phase data mailbox.
+- `async_reqack` is a one-entry four-phase data mailbox. It suppresses valid
+  after destination acceptance, preventing duplicate delivery while request
+  return-to-zero is in progress.
 - `cdc_fifo` and `async_gray_queue` are Gray-pointer queues and require a
-  power-of-two depth of at least two.
+  power-of-two depth of at least two. `async_reqack`, `cdc_2phase`, and these
+  queues abort in-flight transactions when either endpoint resets.
 - `cdc_reset_barrier` asynchronously asserts reset and synchronizes release in
   its two supplied clock domains.
 
 ## Clock, address, and memory
 
 - `clock_divider` changes configuration only at an output-low boundary.
-- `safe_clock_mux` changes enables on falling edges to avoid truncating high
-  pulses; both clocks must be running when selection changes.
+- `safe_clock_mux` synchronizes an ordered selection request and remote enable
+  observations before changing enables on falling edges. Both clocks must keep
+  running, and selection must remain stable until handover completes.
+- `clock_divider` and `clk_int_div_simple` accept new configuration only at a
+  safe output-low boundary. `clk_int_even_div` retains a request received while
+  high and commits the latest request at the next safe boundary.
 - `address_region` and `address_map` use masked comparisons. Map ordering is
   deterministic: the lowest matching index wins.
 - `axi4_addr_gen` calculates the next address within a 4 KiB AXI page. The
   caller owns 4 KiB burst validation.
 - `sync_memory` has positive-logic controls. `tech_ram*` and `tech_regfile*`
   retain their historical active-low controls and are deterministic models.
+  Their simulation models reject active out-of-range addresses, including for
+  non-power-of-two depths; this check is excluded from synthesis.

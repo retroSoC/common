@@ -17,6 +17,12 @@ module cdc_reset_barrier #(
   logic s_reset_a_n;
   logic s_reset_b_n;
 
+  initial begin
+    if (STAGES < 2) begin
+      $fatal(1, "cdc_reset_barrier: STAGES must be at least two");
+    end
+  end
+
   cdc_sync #(
       .STAGE(STAGES)
   ) u_release_a (

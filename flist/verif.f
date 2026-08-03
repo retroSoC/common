@@ -1,0 +1,9 @@
++incdir+rtl
++incdir+rtl/interface
+rtl/interface/apb4_if.sv
+rtl/interface/axi4_if.sv
+rtl/verif/test_base.sv
+rtl/verif/helper.sv
+rtl/verif/apb4_master.sv
+rtl/verif/axi4_master.sv
+rtl/verif/apb4_axi4_master.sv

@@ -9,7 +9,8 @@
 
 // A four-phase, one-entry asynchronous mailbox. Data is held stable by the
 // source until the destination has acknowledged it; only the request and
-// acknowledgement controls cross synchronizers.
+// acknowledgement controls cross synchronizers. Reset on either side aborts
+// an in-flight item and restarts the link from the empty state.
 module async_reqack #(
     parameter int DATA_WIDTH  = 32,
     parameter int SYNC_STAGES = 2
@@ -31,6 +32,9 @@ module async_reqack #(
   logic                  r_acknowledge;
   logic                  s_ack_src;
   logic                  s_req_dst;
+  logic                  s_link_rst_n;
+  logic                  s_src_rst_n;
+  logic                  s_dst_rst_n;
 
   initial begin
     if (DATA_WIDTH < 1 || SYNC_STAGES < 2) begin
@@ -38,11 +42,26 @@ module async_reqack #(
     end
   end
 
+  // A four-phase protocol cannot recover a unilateral reset safely: one side
+  // could otherwise interpret a stale request or acknowledgement as a new
+  // transaction. A reset in either domain therefore flushes the mailbox.
+  assign s_link_rst_n = src_rst_n_i && dst_rst_n_i;
+  cdc_reset_barrier #(
+      .STAGES(SYNC_STAGES)
+  ) u_reset_barrier (
+      .clk_a_i  (src_clk_i),
+      .clk_b_i  (dst_clk_i),
+      .rst_n_i  (s_link_rst_n),
+      .release_i(1'b1),
+      .rst_a_n_o(s_src_rst_n),
+      .rst_b_n_o(s_dst_rst_n)
+  );
+
   cdc_sync #(
       .STAGE(SYNC_STAGES)
   ) u_ack_sync (
       .clk_i  (src_clk_i),
-      .rst_n_i(src_rst_n_i),
+      .rst_n_i(s_src_rst_n),
       .dat_i  (r_acknowledge),
       .dat_o  (s_ack_src)
   );
@@ -50,17 +69,20 @@ module async_reqack #(
       .STAGE(SYNC_STAGES)
   ) u_req_sync (
       .clk_i  (dst_clk_i),
-      .rst_n_i(dst_rst_n_i),
+      .rst_n_i(s_dst_rst_n),
       .dat_i  (r_request),
       .dat_o  (s_req_dst)
   );
 
-  assign src_ready_o = !r_busy;
-  assign dst_valid_o = s_req_dst;
+  assign src_ready_o = s_src_rst_n && !r_busy;
+  // A request stays asserted until the four-phase return-to-zero completes.
+  // Suppress valid after its first destination handshake so a continuously
+  // ready consumer cannot accept the same item again.
+  assign dst_valid_o = s_dst_rst_n && s_req_dst && !r_acknowledge;
   assign dst_data_o  = r_payload;
 
-  always_ff @(posedge src_clk_i or negedge src_rst_n_i) begin
-    if (!src_rst_n_i) begin
+  always_ff @(posedge src_clk_i or negedge s_src_rst_n) begin
+    if (!s_src_rst_n) begin
       r_payload <= '0;
       r_request <= 1'b0;
       r_busy    <= 1'b0;
@@ -75,13 +97,15 @@ module async_reqack #(
     end
   end
 
-  always_ff @(posedge dst_clk_i or negedge dst_rst_n_i) begin
-    if (!dst_rst_n_i) begin
+  always_ff @(posedge dst_clk_i or negedge s_dst_rst_n) begin
+    if (!s_dst_rst_n) begin
       r_acknowledge <= 1'b0;
-    end else if (s_req_dst && dst_ready_i) begin
-      r_acknowledge <= 1'b1;
-    end else if (!s_req_dst) begin
-      r_acknowledge <= 1'b0;
+    end else begin
+      if (!s_req_dst) begin
+        r_acknowledge <= 1'b0;
+      end else if (!r_acknowledge && dst_ready_i) begin
+        r_acknowledge <= 1'b1;
+      end
     end
   end
 endmodule

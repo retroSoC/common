@@ -39,6 +39,10 @@ module spill_register #(
     output logic [DATA_WIDTH-1:0] data_o
 );
 
+  initial begin
+    if (DATA_WIDTH < 1) $fatal(1, "spill_register: DATA_WIDTH must be positive");
+  end
+
   if (BYPASS) begin : SPILL_REG_GEN_BYPASS
     assign valid_o = valid_i && !flush_i;
     assign ready_o = ready_i && !flush_i;

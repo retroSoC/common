@@ -1,0 +1,18 @@
+[options]
+mode bmc
+depth 32
+
+[engines]
+smtbmc bitwuzla
+
+[script]
+read -formal -sv dffr_model.sv cdc_sync.sv rst_sync.sv cdc_rst_ctrlr.sv async_reqack.sv async_reqack_formal.sv
+prep -top async_reqack_formal
+
+[files]
+formal/dffr_model.sv
+rtl/cdc/cdc_sync.sv
+rtl/clkrst/rst_sync.sv
+rtl/cdc/cdc_rst_ctrlr.sv
+rtl/cdc/async_reqack.sv
+formal/async_reqack_formal.sv

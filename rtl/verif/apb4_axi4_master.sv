@@ -15,45 +15,42 @@ class APB4AXI4Master extends TestBase;
   APB4Master apb4_mstr;
   AXI4Master axi4_mstr;
 
-  extern function new(string name = "apb4_axi4_master", virtual apb4_if.master apb4,
-                      virtual axi4_if.master axi4);
-  extern task automatic init();
-  extern task automatic apb4_write(input bit [31:0] addr, input bit [31:0] data);
-  extern task automatic apb4_read(input bit [31:0] addr);
-  extern task automatic apb4_wr_rd_check(input bit [31:0] addr, string name, input bit [31:0] data,
-                                         input Helper::cmp_t cmp_type,
-                                         input Helper::log_lev_t log_level = Helper::NORM);
-  extern task automatic apb4_wr_check(input bit [31:0] addr, string name, input bit [31:0] data,
-                                      input bit [31:0] ref_data, input Helper::cmp_t cmp_type,
-                                      input Helper::log_lev_t log_level = Helper::NORM);
-  extern task automatic apb4_rd_check(input bit [31:0] addr, string name, input bit [31:0] ref_data,
-                                      input Helper::cmp_t cmp_type,
-                                      input Helper::log_lev_t log_level = Helper::NORM);
+  function new(string name = "apb4_axi4_master", virtual apb4_if.master apb4,
+               virtual axi4_if.master axi4);
+    super.new(name);
+    this.name      = name;
+    this.apb4_mstr = new("apb4_master", apb4);
+    this.axi4_mstr = new("axi4_master", axi4);
+  endfunction
+  extern task init();
+  extern task apb4_write(input bit [31:0] addr, input bit [31:0] data);
+  extern task apb4_read(input bit [31:0] addr);
+  extern task apb4_wr_rd_check(input bit [31:0] addr, string name, input bit [31:0] data,
+                               input Helper::cmp_t cmp_type,
+                               input Helper::log_lev_t log_level = Helper::NORM);
+  extern task apb4_wr_check(input bit [31:0] addr, string name, input bit [31:0] data,
+                            input bit [31:0] ref_data, input Helper::cmp_t cmp_type,
+                            input Helper::log_lev_t log_level = Helper::NORM);
+  extern task apb4_rd_check(input bit [31:0] addr, string name, input bit [31:0] ref_data,
+                            input Helper::cmp_t cmp_type,
+                            input Helper::log_lev_t log_level = Helper::NORM);
 
-  extern task automatic axi4_write(
-      input bit [`AXI4_ID_WIDTH-1:0] id, input bit [`AXI4_ADDR_WIDTH-1:0] addr, input bit [7:0] len,
-      input bit [2:0] size, input bit [1:0] burst, input bit [`AXI4_DATA_WIDTH-1:0] data[$]);
-  extern task automatic axi4_read(input bit [`AXI4_ID_WIDTH-1:0] id,
-                                  input bit [`AXI4_ADDR_WIDTH-1:0] addr, input bit [7:0] len,
-                                  input bit [2:0] size, input bit [1:0] burst);
-  extern task automatic axi4_wr_check(
+  extern task axi4_write(input bit [`AXI4_ID_WIDTH-1:0] id, input bit [`AXI4_ADDR_WIDTH-1:0] addr,
+                         input bit [7:0] len, input bit [2:0] size, input bit [1:0] burst,
+                         input bit [`AXI4_DATA_WIDTH-1:0] data[$]);
+  extern task axi4_read(input bit [`AXI4_ID_WIDTH-1:0] id, input bit [`AXI4_ADDR_WIDTH-1:0] addr,
+                        input bit [7:0] len, input bit [2:0] size, input bit [1:0] burst);
+  extern task axi4_wr_check(
       input bit [`AXI4_ID_WIDTH-1:0] id, input bit [`AXI4_ADDR_WIDTH-1:0] addr, input bit [7:0] len,
       input bit [2:0] size, input bit [1:0] burst, input bit [`AXI4_DATA_WIDTH-1:0] data[$],
       input bit [`AXI4_DATA_WIDTH-1:0] ref_data[$], input Helper::cmp_t cmp_type,
       input Helper::log_lev_t log_level = Helper::NORM);
-  extern task automatic axi4_rd_check(
+  extern task axi4_rd_check(
       input bit [`AXI4_ID_WIDTH-1:0] id, input bit [`AXI4_ADDR_WIDTH-1:0] addr, input bit [7:0] len,
       input bit [2:0] size, input bit [1:0] burst, input bit [`AXI4_DATA_WIDTH-1:0] ref_data[$],
       input Helper::cmp_t cmp_type, input Helper::log_lev_t log_level = Helper::NORM);
 endclass
 
-
-function APB4AXI4Master::new(string name, virtual apb4_if.master apb4, virtual axi4_if.master axi4);
-  super.new();
-  this.name      = name;
-  this.apb4_mstr = new("apb4_master", apb4);
-  this.axi4_mstr = new("axi4_master", axi4);
-endfunction
 
 task automatic APB4AXI4Master::init();
   this.apb4_mstr.init();

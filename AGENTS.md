@@ -49,6 +49,11 @@ sources. Every tracked SystemVerilog file must declare an SPDX identifier or a
 recognized upstream license in its first 40 lines; run `make license-check` to
 enforce the policy.
 
+`make test-verilator` also runs the class-based AXI BFM regression. Icarus
+does not fully implement SystemVerilog class and virtual-interface semantics,
+so the BFM test is deliberately Verilator-only; synthesizable RTL remains in
+both simulator regressions.
+
 ## Third-party Material
 
 PULP common_cells-inspired or derived code must keep the original copyright,

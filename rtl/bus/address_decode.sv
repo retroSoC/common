@@ -23,6 +23,12 @@ module address_map #(
 );
   logic s_found;
 
+  initial begin
+    if (ADDR_WIDTH < 1 || REGIONS < 1 || INDEX_WIDTH < ((REGIONS > 1) ? $clog2(REGIONS) : 1)) begin
+      $fatal(1, "address_map: invalid address, region, or index width");
+    end
+  end
+
   always_comb begin
     hit_o      = '0;
     selected_o = '0;
@@ -47,5 +53,9 @@ module address_region #(
     input  logic [ADDR_WIDTH-1:0] addr_i,
     output logic                  match_o
 );
+  initial begin
+    if (ADDR_WIDTH < 1) $fatal(1, "address_region: ADDR_WIDTH must be positive");
+  end
+
   assign match_o = (addr_i & MASK) == (BASE & MASK);
 endmodule

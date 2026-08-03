@@ -38,9 +38,10 @@ module regfield #(
   logic [DATA_WIDTH-1:0] s_wdata;
 
   initial begin
-    if (!((SW_ACS == "rw") || (SW_ACS == "wo") || (SW_ACS == "ro") || (SW_ACS == "w1s") ||
+    if (DATA_WIDTH < 1 ||
+        !((SW_ACS == "rw") || (SW_ACS == "wo") || (SW_ACS == "ro") || (SW_ACS == "w1s") ||
           (SW_ACS == "w1c") || (SW_ACS == "w0c") || (SW_ACS == "rc"))) begin
-      $fatal(1, "regfield: unsupported SW_ACS '%s'", SW_ACS);
+      $fatal(1, "regfield: DATA_WIDTH must be positive and SW_ACS supported ('%s')", SW_ACS);
     end
   end
 

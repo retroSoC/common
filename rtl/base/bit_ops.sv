@@ -9,6 +9,12 @@ module bit_count #(
     input  logic [      WIDTH-1:0] value_i,
     output logic [COUNT_WIDTH-1:0] count_o
 );
+  initial begin
+    if (WIDTH < 1 || COUNT_WIDTH < $clog2(WIDTH + 1)) begin
+      $fatal(1, "bit_count: WIDTH must be positive and COUNT_WIDTH sufficient");
+    end
+  end
+
   always_comb begin
     count_o = '0;
     for (int unsigned bit_idx = 0; bit_idx < WIDTH; bit_idx++) begin
@@ -26,6 +32,12 @@ module leading_zero_count #(
     output logic                   all_zero_o
 );
   logic s_seen_one;
+  initial begin
+    if (WIDTH < 1 || COUNT_WIDTH < $clog2(WIDTH + 1)) begin
+      $fatal(1, "leading_zero_count: WIDTH must be positive and COUNT_WIDTH sufficient");
+    end
+  end
+
   always_comb begin
     count_o    = '0;
     s_seen_one = 1'b0;
@@ -47,6 +59,10 @@ module onehot_check #(
     input  logic [WIDTH-1:0] value_i,
     output logic             valid_o
 );
+  initial begin
+    if (WIDTH < 1) $fatal(1, "onehot_check: WIDTH must be positive");
+  end
+
   always_comb begin
     valid_o = (value_i != '0) && ((value_i & (value_i - 1'b1)) == '0);
     if (ALLOW_ZERO && value_i == '0) begin
@@ -64,6 +80,12 @@ module onehot_to_index #(
     output logic                   valid_o
 );
   logic [WIDTH-1:0] s_onehot;
+
+  initial begin
+    if (WIDTH < 1 || INDEX_WIDTH < ((WIDTH > 1) ? $clog2(WIDTH) : 1)) begin
+      $fatal(1, "onehot_to_index: WIDTH must be positive and INDEX_WIDTH sufficient");
+    end
+  end
 
   onehot_check #(
       .WIDTH     (WIDTH),

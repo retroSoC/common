@@ -18,6 +18,10 @@ module bypass_buffer #(
     input  logic                  out_ready_i,
     output logic [DATA_WIDTH-1:0] out_data_o
 );
+  initial begin
+    if (DATA_WIDTH < 1) $fatal(1, "bypass_buffer: DATA_WIDTH must be positive");
+  end
+
   assign in_ready_o  = out_ready_i && !flush_i;
   assign out_valid_o = in_valid_i && !flush_i;
   assign out_data_o  = in_data_i;
@@ -38,6 +42,10 @@ module stream_buffer #(
     input  logic                  out_ready_i,
     output logic [DATA_WIDTH-1:0] out_data_o
 );
+  initial begin
+    if (DATA_WIDTH < 1) $fatal(1, "stream_buffer: DATA_WIDTH must be positive");
+  end
+
   spill_register #(
       .DATA_WIDTH(DATA_WIDTH),
       .BYPASS    (TRANSPARENT)
@@ -67,6 +75,12 @@ module stream_selector #(
     input  logic                                    out_ready_i,
     output logic [  DATA_WIDTH-1:0]                 out_data_o
 );
+  initial begin
+    if (DATA_WIDTH < 1 || PORTS < 1 || SELECT_WIDTH < ((PORTS > 1) ? $clog2(PORTS) : 1)) begin
+      $fatal(1, "stream_selector: invalid data, port, or select width");
+    end
+  end
+
   always_comb begin
     in_ready_o  = '0;
     out_valid_o = 1'b0;
@@ -95,6 +109,12 @@ module stream_router #(
     input  logic [       PORTS-1:0]                 out_ready_i,
     output logic [       PORTS-1:0][DATA_WIDTH-1:0] out_data_o
 );
+  initial begin
+    if (DATA_WIDTH < 1 || PORTS < 1 || SELECT_WIDTH < ((PORTS > 1) ? $clog2(PORTS) : 1)) begin
+      $fatal(1, "stream_router: invalid data, port, or select width");
+    end
+  end
+
   always_comb begin
     in_ready_o  = 1'b0;
     out_valid_o = '0;
@@ -114,6 +134,9 @@ module stream_replicator #(
     parameter int DATA_WIDTH = 32,
     parameter int PORTS      = 4
 ) (
+    input  logic                                  clk_i,
+    input  logic                                  rst_n_i,
+    input  logic                                  flush_i,
     input  logic                                  in_valid_i,
     output logic                                  in_ready_o,
     input  logic [DATA_WIDTH-1:0]                 in_data_i,
@@ -122,13 +145,46 @@ module stream_replicator #(
     input  logic [     PORTS-1:0]                 out_ready_i,
     output logic [     PORTS-1:0][DATA_WIDTH-1:0] out_data_o
 );
-  logic s_all_ready;
+  logic [DATA_WIDTH-1:0] r_payload;
+  logic [     PORTS-1:0] r_pending;
+  logic                  r_active;
+  logic [     PORTS-1:0] s_pending_after_transfer;
 
-  assign s_all_ready = |enable_i && &(out_ready_i | ~enable_i);
-  assign in_ready_o  = s_all_ready;
-  assign out_valid_o = {PORTS{in_valid_i}} & enable_i;
+  initial begin
+    if (DATA_WIDTH < 1 || PORTS < 1) begin
+      $fatal(1, "stream_replicator: DATA_WIDTH and PORTS must be positive");
+    end
+  end
+
+  // The target mask and payload are sampled on the input handshake. Every
+  // enabled target keeps valid asserted until its own transfer completes.
+  assign in_ready_o               = !r_active && !flush_i;
+  assign out_valid_o              = r_pending & {PORTS{r_active && !flush_i}};
+  assign s_pending_after_transfer = r_pending & ~out_ready_i;
   for (genvar port_idx = 0; port_idx < PORTS; port_idx++) begin : GEN_REPLICA_DATA
-    assign out_data_o[port_idx] = in_data_i;
+    assign out_data_o[port_idx] = r_payload;
+  end
+
+  always_ff @(posedge clk_i or negedge rst_n_i) begin
+    if (!rst_n_i) begin
+      r_payload <= '0;
+      r_pending <= '0;
+      r_active  <= 1'b0;
+    end else if (flush_i) begin
+      r_pending <= '0;
+      r_active  <= 1'b0;
+    end else if (!r_active) begin
+      if (in_valid_i) begin
+        r_payload <= in_data_i;
+        r_pending <= enable_i;
+        r_active  <= |enable_i;
+      end
+    end else begin
+      r_pending <= s_pending_after_transfer;
+      if (s_pending_after_transfer == '0) begin
+        r_active <= 1'b0;
+      end
+    end
   end
 endmodule
 
@@ -145,6 +201,12 @@ module stream_collector #(
     output logic [PORTS*DATA_WIDTH-1:0]                 out_data_o
 );
   logic s_all_present;
+
+  initial begin
+    if (DATA_WIDTH < 1 || PORTS < 1) begin
+      $fatal(1, "stream_collector: DATA_WIDTH and PORTS must be positive");
+    end
+  end
 
   assign s_all_present = |enable_i && &(in_valid_i | ~enable_i);
   assign out_valid_o   = s_all_present;
@@ -173,8 +235,8 @@ module stream_credit_limiter #(
   logic                    s_accept;
 
   initial begin
-    if (MAX_CREDITS < 1) begin
-      $fatal(1, "stream_credit_limiter: MAX_CREDITS must be positive");
+    if (DATA_WIDTH < 1 || MAX_CREDITS < 1 || CREDIT_WIDTH < $clog2(MAX_CREDITS + 1)) begin
+      $fatal(1, "stream_credit_limiter: invalid data, credit, or counter width");
     end
   end
 

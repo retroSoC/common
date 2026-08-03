@@ -16,41 +16,40 @@ class AXI4Master extends TestBase;
   logic                  [`AXI4_DATA_WIDTH-1:0] wr_data[$];
   virtual axi4_if.master                        axi4;
 
-  extern function new(string name = "axi4_master", virtual axi4_if.master axi4);
-  extern function automatic bit [`AXI4_WSTRB_WIDTH-1:0] calc_strb(
-      input bit [`AXI4_WSTRB_WIDTH-1:0] addr, input bit [2:0] size);
-  extern function automatic bit [`AXI4_ADDR_WIDTH-1:0] calc_addr(
-      input bit [`AXI4_WSTRB_WIDTH-1:0] addr, input bit [2:0] size, input bit [1:0] burst);
-  extern task automatic init();
-  extern task automatic write(
-      input bit [`AXI4_ID_WIDTH-1:0] id, input bit [`AXI4_ADDR_WIDTH-1:0] addr, input bit [7:0] len,
-      input bit [2:0] size, input bit [1:0] burst, input bit [`AXI4_DATA_WIDTH-1:0] data[$]);
+  function new(string name = "axi4_master", virtual axi4_if.master axi4);
+    super.new(name);
+    this.name    = name;
+    this.rd_data = {};
+    this.wr_data = {};
+    this.axi4    = axi4;
+  endfunction
+  extern function bit [`AXI4_WSTRB_WIDTH-1:0] calc_strb(input bit [`AXI4_ADDR_WIDTH-1:0] addr,
+                                                        input bit [2:0] size);
+  extern function bit [`AXI4_ADDR_WIDTH-1:0] calc_addr(input bit [`AXI4_ADDR_WIDTH-1:0] addr,
+                                                       input bit [2:0] size, input bit [1:0] burst);
+  extern function bit [`AXI4_ADDR_WIDTH-1:0] calc_burst_addr(
+      input bit [`AXI4_ADDR_WIDTH-1:0] addr, input bit [`AXI4_ADDR_WIDTH-1:0] base_addr,
+      input bit [7:0] len, input bit [2:0] size, input bit [1:0] burst);
+  extern function bit burst_is_legal(input bit [`AXI4_ADDR_WIDTH-1:0] addr, input bit [7:0] len,
+                                     input bit [2:0] size, input bit [1:0] burst);
+  extern task init();
+  extern task write(input bit [`AXI4_ID_WIDTH-1:0] id, input bit [`AXI4_ADDR_WIDTH-1:0] addr,
+                    input bit [7:0] len, input bit [2:0] size, input bit [1:0] burst,
+                    input bit [`AXI4_DATA_WIDTH-1:0] data[$]);
 
-  extern task automatic read(input bit [`AXI4_ID_WIDTH-1:0] id,
-                             input bit [`AXI4_ADDR_WIDTH-1:0] addr, input bit [7:0] len,
-                             input bit [2:0] size, input bit [1:0] burst);
-  // extern task automatic wr_rd_check(input bit [31:0] addr, string name, input bit [63:0] data,
-  //                                   input Helper::cmp_t cmp_type,
-  //                                   input Helper::log_lev_t log_level = Helper::NORM);
-  extern task automatic wr_check(
-      input bit [`AXI4_ID_WIDTH-1:0] id, input bit [`AXI4_ADDR_WIDTH-1:0] addr, input bit [7:0] len,
-      input bit [2:0] size, input bit [1:0] burst, input bit [`AXI4_DATA_WIDTH-1:0] data[$],
-      input bit [`AXI4_DATA_WIDTH-1:0] ref_data[$], input Helper::cmp_t cmp_type,
-      input Helper::log_lev_t log_level = Helper::NORM);
+  extern task read(input bit [`AXI4_ID_WIDTH-1:0] id, input bit [`AXI4_ADDR_WIDTH-1:0] addr,
+                   input bit [7:0] len, input bit [2:0] size, input bit [1:0] burst);
+  extern task wr_check(input bit [`AXI4_ID_WIDTH-1:0] id, input bit [`AXI4_ADDR_WIDTH-1:0] addr,
+                       input bit [7:0] len, input bit [2:0] size, input bit [1:0] burst,
+                       input bit [`AXI4_DATA_WIDTH-1:0] data[$],
+                       input bit [`AXI4_DATA_WIDTH-1:0] ref_data[$], input Helper::cmp_t cmp_type,
+                       input Helper::log_lev_t log_level = Helper::NORM);
 
-  extern task automatic rd_check(
-      input bit [`AXI4_ID_WIDTH-1:0] id, input bit [`AXI4_ADDR_WIDTH-1:0] addr, input bit [7:0] len,
-      input bit [2:0] size, input bit [1:0] burst, input bit [`AXI4_DATA_WIDTH-1:0] ref_data[$],
-      input Helper::cmp_t cmp_type, input Helper::log_lev_t log_level = Helper::NORM);
+  extern task rd_check(input bit [`AXI4_ID_WIDTH-1:0] id, input bit [`AXI4_ADDR_WIDTH-1:0] addr,
+                       input bit [7:0] len, input bit [2:0] size, input bit [1:0] burst,
+                       input bit [`AXI4_DATA_WIDTH-1:0] ref_data[$], input Helper::cmp_t cmp_type,
+                       input Helper::log_lev_t log_level = Helper::NORM);
 endclass
-
-function AXI4Master::new(string name, virtual axi4_if.master axi4);
-  super.new();
-  this.name    = name;
-  this.rd_data = {};
-  this.wr_data = {};
-  this.axi4    = axi4;
-endfunction
 
 task automatic AXI4Master::init();
   this.axi4.awid     = '0;
@@ -91,45 +90,89 @@ task automatic AXI4Master::init();
 endtask
 
 function automatic bit [`AXI4_WSTRB_WIDTH-1:0] AXI4Master::calc_strb(
-    input bit [`AXI4_WSTRB_WIDTH-1:0] addr, input bit [2:0] size);
+    input bit [`AXI4_ADDR_WIDTH-1:0] addr, input bit [2:0] size);
 
-  bit [`AXI4_WSTRB_WIDTH-1:0] align_strb = '0;
-  int                         ofset = addr % `AXI4_WSTRB_WIDTH;
-  unique case (size)
-    `AXI4_BURST_SIZE_1BYTE:  align_strb = {1{1'b1}};
-    `AXI4_BURST_SIZE_2BYTES: align_strb = {2{1'b1}};
-    `AXI4_BURST_SIZE_4BYTES: align_strb = {4{1'b1}};
-    `AXI4_BURST_SIZE_8BYTES: align_strb = {8{1'b1}};
-    default:                 align_strb = '0;
-  endcase
+  int unsigned                         byte_count;
+  int unsigned                         byte_offset;
+  bit          [`AXI4_WSTRB_WIDTH-1:0] strobe;
 
-  return align_strb << ofset;
+  strobe      = '0;
+  byte_count  = 1 << size;
+  byte_offset = addr % `AXI4_WSTRB_WIDTH;
+  if (byte_count <= `AXI4_WSTRB_WIDTH && byte_offset + byte_count <= `AXI4_WSTRB_WIDTH) begin
+    for (int unsigned byte_idx = 0; byte_idx < byte_count; byte_idx++) begin
+      strobe[byte_offset+byte_idx] = 1'b1;
+    end
+  end
+  return strobe;
 endfunction
 
 function automatic bit [`AXI4_ADDR_WIDTH-1:0] AXI4Master::calc_addr(
-    input bit [`AXI4_WSTRB_WIDTH-1:0] addr, input bit [2:0] size, input bit [1:0] burst);
+    input bit [`AXI4_ADDR_WIDTH-1:0] addr, input bit [2:0] size, input bit [1:0] burst);
 
-  int ofset;
   unique case (burst)
     `AXI4_BURST_TYPE_FIXED: return addr;
-    `AXI4_BURST_TYPE_INCR: begin
-      ofset = addr % `AXI4_WSTRB_WIDTH;
-      if ((ofset + (1 << size)) <= `AXI4_WSTRB_WIDTH) begin
-        return addr + (1 << size);
-      end else begin
-        return addr + `AXI4_WSTRB_WIDTH - (1 << size);  // TODO: right?
-      end
-    end
-    `AXI4_BURST_TYPE_WRAP: begin
-      $display("no support now");
-      return addr;
-    end
-    `AXI4_BURST_TYPE_RESV: begin
-      $display("error burst type");
-      return addr;
-    end
+    `AXI4_BURST_TYPE_INCR:  return addr + `AXI4_ADDR_WIDTH'(1 << size);
+    default:                return addr;
   endcase
+endfunction
 
+function automatic bit [`AXI4_ADDR_WIDTH-1:0] AXI4Master::calc_burst_addr(
+    input bit [`AXI4_ADDR_WIDTH-1:0] addr, input bit [`AXI4_ADDR_WIDTH-1:0] base_addr,
+    input bit [7:0] len, input bit [2:0] size, input bit [1:0] burst);
+
+  longint unsigned beat_bytes;
+  longint unsigned burst_bytes;
+  longint unsigned wrap_base;
+  longint unsigned next_addr;
+  longint unsigned addr_value;
+  longint unsigned base_value;
+  longint unsigned beat_count;
+
+  addr_value = 64'(addr);
+  base_value = 64'(base_addr);
+  beat_count = 64'(len) + 64'd1;
+  beat_bytes = 64'd1 << size;
+  unique case (burst)
+    `AXI4_BURST_TYPE_FIXED: return addr;
+    `AXI4_BURST_TYPE_INCR:  return `AXI4_ADDR_WIDTH'(addr_value + beat_bytes);
+    `AXI4_BURST_TYPE_WRAP: begin
+      burst_bytes = beat_bytes * beat_count;
+      wrap_base   = (base_value / burst_bytes) * burst_bytes;
+      next_addr   = addr_value + beat_bytes;
+      return `AXI4_ADDR_WIDTH'((next_addr >= wrap_base + burst_bytes) ? wrap_base : next_addr);
+    end
+    default:                return addr;
+  endcase
+endfunction
+
+function automatic bit AXI4Master::burst_is_legal(input bit [`AXI4_ADDR_WIDTH-1:0] addr,
+                                                  input bit [7:0] len, input bit [2:0] size,
+                                                  input bit [1:0] burst);
+
+  longint unsigned beat_bytes;
+  longint unsigned burst_bytes;
+  longint unsigned wrap_base;
+  longint unsigned addr_value;
+  longint unsigned beat_count;
+
+  addr_value     = 64'(addr);
+  beat_count     = 64'(len) + 64'd1;
+  burst_is_legal = (int'(size) <= `AXI4_DATA_BLOG) && (burst != `AXI4_BURST_TYPE_RESV);
+  beat_bytes     = 64'd1 << size;
+  if (this.calc_strb(addr, size) == '0) burst_is_legal = 1'b0;
+  if (burst_is_legal && burst == `AXI4_BURST_TYPE_WRAP) begin
+    if (!(len == 8'd1 || len == 8'd3 || len == 8'd7 || len == 8'd15)) begin
+      burst_is_legal = 1'b0;
+    end
+    if ((addr_value % beat_bytes) != 0) burst_is_legal = 1'b0;
+    burst_bytes = beat_bytes * beat_count;
+    wrap_base   = (addr_value / burst_bytes) * burst_bytes;
+    if ((wrap_base & 64'hfff) + burst_bytes > 64'd4096) burst_is_legal = 1'b0;
+  end else if (burst_is_legal && burst == `AXI4_BURST_TYPE_INCR &&
+               ((addr_value & 64'hfff) + beat_bytes * beat_count > 64'd4096)) begin
+    burst_is_legal = 1'b0;
+  end
 endfunction
 
 
@@ -137,12 +180,19 @@ task automatic AXI4Master::write(
     input bit [`AXI4_ID_WIDTH-1:0] id, input bit [`AXI4_ADDR_WIDTH-1:0] addr, input bit [7:0] len,
     input bit [2:0] size, input bit [1:0] burst, input bit [`AXI4_DATA_WIDTH-1:0] data[$]);
 
-  bit [ `AXI4_ADDR_WIDTH-1:0] tmp_addr;
-  bit [`AXI4_WSTRB_WIDTH-1:0] tmp_strb;
+  bit          [`AXI4_ADDR_WIDTH-1:0] tmp_addr;
+  int unsigned                        beat_count;
+
+  if (!this.burst_is_legal(addr, len, size, burst)) begin
+    $fatal(1, "%s: illegal AXI write burst", this.name);
+  end
+  beat_count = int'(len) + 1;
+  if (data.size() != beat_count) begin
+    $fatal(1, "%s: write data count does not match AxLEN", this.name);
+  end
 
   // aw channel
-  @(posedge this.axi4.aclk);
-  #`REGISTER_DELAY;
+  @(negedge this.axi4.aclk);
   this.axi4.awid    = id;
   this.axi4.awaddr  = addr;
   this.axi4.awlen   = len;
@@ -150,75 +200,59 @@ task automatic AXI4Master::write(
   this.axi4.awburst = burst;
   this.axi4.awvalid = 1'b1;
 
-  @(posedge this.axi4.aclk);
-  while (~this.axi4.awready) begin
-    @(posedge this.axi4.aclk);
-  end
-  #`REGISTER_DELAY;
-  // $display("%t aw trigger", $time);
+  do @(posedge this.axi4.aclk); while (!this.axi4.awready);
+  @(negedge this.axi4.aclk);
   this.axi4.awid    = '0;
   this.axi4.awaddr  = 'x;
   this.axi4.awlen   = '0;
   this.axi4.awsize  = `AXI4_BURST_SIZE_1BYTE;
   this.axi4.awburst = `AXI4_BURST_TYPE_FIXED;
   this.axi4.awvalid = '0;
-  @(negedge this.axi4.aclk);
-  #`REGISTER_DELAY;
   // w burst channel
-  tmp_addr = addr;
-  for (int i = 0; i < len + 1'd1; i++) begin
-    this.axi4.wdata  = data.pop_front();
+  tmp_addr          = addr;
+  for (int unsigned i = 0; i < beat_count; i++) begin
+    this.axi4.wdata  = data[i];
     this.axi4.wstrb  = this.calc_strb(tmp_addr, size);
-    tmp_addr         = this.calc_addr(tmp_addr, size, burst);
-    this.axi4.wlast  = i == len;
+    this.axi4.wlast  = i == beat_count - 1;
     this.axi4.wvalid = 1'b1;
-    @(posedge this.axi4.aclk);
-    while (~this.axi4.wready) begin
-      @(posedge this.axi4.aclk);
-    end
-    #`REGISTER_DELAY;
-    // $display("%t w burst trigger", $time);
+    do @(posedge this.axi4.aclk); while (!this.axi4.wready);
+    tmp_addr = this.calc_burst_addr(tmp_addr, addr, len, size, burst);
+    @(negedge this.axi4.aclk);
   end
 
   this.axi4.wdata  = 'x;
   this.axi4.wstrb  = '0;
   this.axi4.wlast  = '0;
   this.axi4.wvalid = '0;
-  @(negedge this.axi4.aclk);
 
   // b channel
   this.axi4.bready = 1'b1;
-  @(posedge this.axi4.aclk);
-  while (~this.axi4.bvalid) begin
-    @(posedge this.axi4.aclk);
-  end
+  do @(posedge this.axi4.aclk); while (!this.axi4.bvalid);
 
   if (this.axi4.bid != id) begin
-    $error("%t [wr mismatch id] awid is %d, bid: %d", $time, id, this.axi4.bid);
-  end else begin
-    unique case (this.axi4.bresp)
-      `AXI4_RESP_OKAY: begin
-      end
-      `AXI4_RESP_EXOKAY:       $display("%t EXOKAY", $time);
-      `AXI4_RESP_SLAVE_ERROR:  $display("%t SLVERR", $time);
-      `AXI4_RESP_DECODE_ERROR: $display("%t DECERR", $time);
-    endcase
+    $fatal(1, "%s: write response ID mismatch", this.name);
   end
-  #`REGISTER_DELAY;
-  this.axi4.bready = 1'b0;
+  if (this.axi4.bresp != `AXI4_RESP_OKAY && this.axi4.bresp != `AXI4_RESP_EXOKAY) begin
+    $fatal(1, "%s: write response error %0b", this.name, this.axi4.bresp);
+  end
   @(negedge this.axi4.aclk);
+  this.axi4.bready = 1'b0;
 endtask
 
 task automatic AXI4Master::read(input bit [`AXI4_ID_WIDTH-1:0] id,
                                 input bit [`AXI4_ADDR_WIDTH-1:0] addr, input bit [7:0] len,
                                 input bit [2:0] size, input bit [1:0] burst);
-  bit [ `AXI4_ADDR_WIDTH-1:0] tmp_addr;
-  bit [`AXI4_WSTRB_WIDTH-1:0] tmp_strb;
-  bit [ `AXI4_DATA_WIDTH-1:0] tmp_mask;
+  bit          [ `AXI4_ADDR_WIDTH-1:0] tmp_addr;
+  bit          [`AXI4_WSTRB_WIDTH-1:0] tmp_strb;
+  bit          [ `AXI4_DATA_WIDTH-1:0] tmp_mask;
+  int unsigned                         beat_count;
   this.rd_data = {};
+  if (!this.burst_is_legal(addr, len, size, burst)) begin
+    $fatal(1, "%s: illegal AXI read burst", this.name);
+  end
+
   // ar channel
-  @(posedge this.axi4.aclk);
-  #`REGISTER_DELAY;
+  @(negedge this.axi4.aclk);
   this.axi4.arid    = id;
   this.axi4.araddr  = addr;
   this.axi4.arlen   = len;
@@ -226,51 +260,41 @@ task automatic AXI4Master::read(input bit [`AXI4_ID_WIDTH-1:0] id,
   this.axi4.arburst = burst;
   this.axi4.arvalid = 1'b1;
 
-  @(posedge this.axi4.aclk);
-  while (~this.axi4.arready) begin
-    @(posedge this.axi4.aclk);
-  end
-  #`REGISTER_DELAY;
-  // $display("%t ar trigger", $time);
+  do @(posedge this.axi4.aclk); while (!this.axi4.arready);
+  @(negedge this.axi4.aclk);
   this.axi4.arid    = '0;
   this.axi4.araddr  = 'x;
   this.axi4.arlen   = '0;
   this.axi4.arsize  = `AXI4_BURST_SIZE_1BYTE;
   this.axi4.arburst = `AXI4_BURST_TYPE_FIXED;
   this.axi4.arvalid = '0;
-  @(negedge this.axi4.aclk);
-
   // r burst channel
-  tmp_addr = addr;
-  @(posedge this.axi4.aclk);
-  #`REGISTER_DELAY;
-  this.axi4.rready = 1'b1;
-  for (int i = 0; i < len + 1'd1; i++) begin
-    @(posedge this.axi4.aclk);
-    while (~this.axi4.rvalid) begin
-      @(posedge this.axi4.aclk);
-    end
+  tmp_addr          = addr;
+  beat_count        = int'(len) + 1;
+  this.axi4.rready  = 1'b1;
+  for (int unsigned i = 0; i < beat_count; i++) begin
+    do @(posedge this.axi4.aclk); while (!this.axi4.rvalid);
     tmp_strb = this.calc_strb(tmp_addr, size);
+    tmp_mask = '0;
     for (int j = 0; j < `AXI4_WSTRB_WIDTH; j++) begin
       tmp_mask[j*8+:8] = {8{tmp_strb[j]}};
     end
     // $display("%t: this.axi4.rdata: %h", $time, this.axi4.rdata);
     this.rd_data.push_back(this.axi4.rdata & tmp_mask);
     if (this.axi4.rid != id) begin
-      $error("%t [rd mismatch id] arid is %d, rid: %d", $time, id, this.axi4.rid);
+      $fatal(1, "%s: read response ID mismatch", this.name);
     end
-
-    if (i == len && ~axi4.rlast) begin
-      $error("%t [rd error last]", $time, id);
-    end else begin
-      @(negedge this.axi4.aclk);
-      tmp_addr = this.calc_addr(tmp_addr, size, burst);
+    if (this.axi4.rresp != `AXI4_RESP_OKAY && this.axi4.rresp != `AXI4_RESP_EXOKAY) begin
+      $fatal(1, "%s: read response error %0b", this.name, this.axi4.rresp);
     end
-    #`REGISTER_DELAY;
+    if (this.axi4.rlast != (i == beat_count - 1)) begin
+      $fatal(1, "%s: RLAST did not match burst length", this.name);
+    end
+    tmp_addr = this.calc_burst_addr(tmp_addr, addr, len, size, burst);
   end
 
-  this.axi4.rready = 1'b0;
   @(negedge this.axi4.aclk);
+  this.axi4.rready = 1'b0;
 endtask
 
 // task automatic AXI4Master::wr_rd_check(input bit [31:0] addr, string name, input bit [63:0] data,
@@ -298,55 +322,22 @@ task automatic AXI4Master::rd_check(
     input bit [`AXI4_ID_WIDTH-1:0] id, input bit [`AXI4_ADDR_WIDTH-1:0] addr, input bit [7:0] len,
     input bit [2:0] size, input bit [1:0] burst, input bit [`AXI4_DATA_WIDTH-1:0] ref_data[$],
     input Helper::cmp_t cmp_type, input Helper::log_lev_t log_level = Helper::NORM);
-  bit [ `AXI4_DATA_WIDTH-1:0] filter_ref_data[$] = {};
+  bit [ `AXI4_DATA_WIDTH-1:0] filter_ref_data[$];
   bit [ `AXI4_ADDR_WIDTH-1:0] nxt_addr;
-  bit [`AXI4_WSTRB_WIDTH-1:0] ofset;
+  bit [`AXI4_WSTRB_WIDTH-1:0] strb;
+  bit [ `AXI4_DATA_WIDTH-1:0] mask;
 
   this.read(id, addr, len, size, burst);
 
   nxt_addr = addr;
   foreach (ref_data[i]) begin
-    ofset = nxt_addr % `AXI4_WSTRB_WIDTH;
-
-    unique case (size)
-      `AXI4_BURST_SIZE_1BYTE: begin
-        unique case (ofset[2:0])
-          3'b000: filter_ref_data[i] = {56'b0, ref_data[i][7:0]};
-          3'b001: filter_ref_data[i] = {48'b0, ref_data[i][15:8], 8'b0};
-          3'b010: filter_ref_data[i] = {40'b0, ref_data[i][23:16], 16'b0};
-          3'b011: filter_ref_data[i] = {32'b0, ref_data[i][31:24], 24'b0};
-          3'b100: filter_ref_data[i] = {24'b0, ref_data[i][39:32], 32'b0};
-          3'b101: filter_ref_data[i] = {16'b0, ref_data[i][47:40], 40'b0};
-          3'b110: filter_ref_data[i] = {8'b0, ref_data[i][55:48], 48'b0};
-          3'b111: filter_ref_data[i] = {ref_data[i][63:56], 56'b0};
-        endcase
-      end
-      `AXI4_BURST_SIZE_2BYTES: begin
-        unique case (ofset[2:1])
-          2'b00: filter_ref_data[i] = {48'b0, ref_data[i][15:0]};
-          2'b01: filter_ref_data[i] = {32'b0, ref_data[i][31:16], 16'b0};
-          2'b10: filter_ref_data[i] = {16'b0, ref_data[i][47:32], 32'b0};
-          2'b11: filter_ref_data[i] = {ref_data[i][63:48], 48'b0};
-        endcase
-      end
-      `AXI4_BURST_SIZE_4BYTES: begin
-        unique case (ofset[2])
-          1'b0: filter_ref_data[i] = {32'b0, ref_data[i][31:0]};
-          1'b1: filter_ref_data[i] = {ref_data[i][63:32], 32'b0};
-        endcase
-      end
-      `AXI4_BURST_SIZE_8BYTES: filter_ref_data[i] = ref_data[i][63:0];
-      default: begin
-        filter_ref_data[i] = ref_data[i];
-        $display("no support now");
-      end
-    endcase
-
-    nxt_addr = this.calc_addr(nxt_addr, size, burst);
+    strb = this.calc_strb(nxt_addr, size);
+    mask = '0;
+    for (int unsigned byte_idx = 0; byte_idx < `AXI4_WSTRB_WIDTH; byte_idx++) begin
+      mask[byte_idx*8+:8] = {8{strb[byte_idx]}};
+    end
+    filter_ref_data.push_back(ref_data[i] & mask);
+    nxt_addr = this.calc_burst_addr(nxt_addr, addr, len, size, burst);
   end
-
-  // foreach (this.rd_data[i]) begin
-  // $display("rd data: %h", this.rd_data[i]);
-  // end
   Helper::check_queue(name, this.rd_data, filter_ref_data, cmp_type, log_level);
 endtask

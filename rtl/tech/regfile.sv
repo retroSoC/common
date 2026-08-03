@@ -20,6 +20,20 @@ module tech_regfile #(
   $error("tech_regfile: provide a technology implementation when backend is enabled");
 `else
   logic [BIT_WIDTH-1:0] r_storage[0:WORD_DEPTH-1];
+  initial begin
+    if (BIT_WIDTH < 1 || WORD_DEPTH < 1 || ADDR_WIDTH < ((WORD_DEPTH > 1) ? $clog2(
+            WORD_DEPTH
+        ) : 1)) begin
+      $fatal(1, "tech_regfile: invalid data, depth, or address geometry");
+    end
+  end
+`ifndef SYNTHESIS
+  always_ff @(posedge clk_i) begin
+    if (!en_i && int'($unsigned(addr_i)) >= WORD_DEPTH) begin
+      $fatal(1, "tech_regfile: address %0d exceeds depth %0d", addr_i, WORD_DEPTH);
+    end
+  end
+`endif
   always_ff @(posedge clk_i) begin
     if (!en_i && !wen_i) r_storage[addr_i] <= dat_i;
     else if (!en_i && wen_i) dat_o <= r_storage[addr_i];
@@ -46,10 +60,20 @@ module tech_regfile_bm #(
 `else
   logic [BIT_WIDTH-1:0] r_storage[0:WORD_DEPTH-1];
   initial begin
-    if (BIT_WIDTH < 8 || BIT_WIDTH % 8 != 0 || WORD_DEPTH < 1) begin
-      $fatal(1, "tech_regfile_bm: BIT_WIDTH must be a positive multiple of eight");
+    if (BIT_WIDTH < 8 || BIT_WIDTH % 8 != 0 || WORD_DEPTH < 1 ||
+        ADDR_WIDTH < ((WORD_DEPTH > 1) ? $clog2(
+            WORD_DEPTH
+        ) : 1) || BYTE_COUNT != BIT_WIDTH / 8) begin
+      $fatal(1, "tech_regfile_bm: invalid data, depth, byte, or address geometry");
     end
   end
+`ifndef SYNTHESIS
+  always_ff @(posedge clk_i) begin
+    if (!en_i && int'($unsigned(addr_i)) >= WORD_DEPTH) begin
+      $fatal(1, "tech_regfile_bm: address %0d exceeds depth %0d", addr_i, WORD_DEPTH);
+    end
+  end
+`endif
   always_ff @(posedge clk_i) begin
     if (!en_i && !wen_i) begin
       for (int unsigned byte_idx = 0; byte_idx < BYTE_COUNT; byte_idx++) begin

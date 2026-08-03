@@ -29,9 +29,11 @@ module clk_int_even_div_static #(
     input  logic rst_n_i,
     output logic clk_o
 );
-  // if (DIV_VALUE <= 0 || DIV_VALUE % 2) begin
-  //   $error("DIV_VALUE must be strictly larger than 0 and be even value");
-  // end
+  initial begin
+    if (DIV_VALUE_WIDTH < 1) begin
+      $fatal(1, "clk_int_even_div_static: DIV_VALUE_WIDTH must be positive");
+    end
+  end
 
   logic [DIV_VALUE_WIDTH-1:0] s_cnt_d, s_cnt_q;
   logic s_clk_d, s_clk_q;
@@ -63,9 +65,11 @@ module clk_int_odd_div_static #(
     input  logic rst_n_i,
     output logic clk_o
 );
-  // if (DIV_VALUE < 2 || DIV_VALUE % 2 == 0) begin
-  //   $error("DIV_VALUE must be strictly larger than 0 and be odd value");
-  // end
+  initial begin
+    if (DIV_VALUE < 3 || DIV_VALUE % 2 == 0) begin
+      $fatal(1, "clk_int_odd_div_static: DIV_VALUE must be an odd value of at least three");
+    end
+  end
 
   localparam int DIV_VALUE_WIDTH = $clog2(DIV_VALUE) + 1;
   logic [DIV_VALUE_WIDTH-1:0] s_cnt_d, s_cnt_q;
@@ -145,7 +149,16 @@ module clk_int_div_simple #(
   logic s_clk_d, s_clk_q;
   logic div_hdshk;
 
-  assign div_ready_o = 1'b1;
+  initial begin
+    if (DIV_VALUE_WIDTH < 1 || DONE_DELAY_WIDTH < 1) begin
+      $fatal(1, "clk_int_div_simple: parameter widths must be positive");
+    end
+  end
+
+  // A configuration may replace a bypassed clock at an input edge, or a
+  // divided clock only while its generated output is low. This keeps the
+  // previous high pulse intact.
+  assign div_ready_o = (s_div_q == '0) || !s_clk_q;
   assign div_hdshk = div_valid_i & div_ready_o;
   assign clk_cnt_o = s_cnt_q;
   assign clk_fir_trg_o = s_div_q == '0 ? '0 :
@@ -226,6 +239,9 @@ module clk_int_even_div #(
   logic [COUNT_WIDTH-1:0] r_count;
   logic                   r_clock;
   logic                   r_divide_enabled;
+  logic                   r_pending_valid;
+  logic                   r_pending_divide;
+  logic                   s_commit_config;
 
   initial begin
     if (DIV_VALUE < 2 || DIV_VALUE % 2 != 0) begin
@@ -233,19 +249,31 @@ module clk_int_even_div #(
     end
   end
 
+  // Apply a pending request only at a low output boundary. Requests arriving
+  // while the clock is high are retained; if several arrive, the newest value
+  // is intentionally the one committed at the next safe boundary.
+  assign s_commit_config = (r_pending_valid || div_valid_i) &&
+      (!en_i || !r_divide_enabled || !r_clock);
+
   always_ff @(posedge clk_i or negedge rst_n_i) begin
     if (!rst_n_i) begin
       r_count          <= '0;
       r_clock          <= 1'b0;
       r_divide_enabled <= ENABLE_CLOCK_IN_RESET;
+      r_pending_valid  <= 1'b0;
+      r_pending_divide <= 1'b0;
       div_done_o       <= 1'b0;
     end else begin
       div_done_o <= 1'b0;
-      if (div_valid_i) begin
+      if (s_commit_config) begin
         r_count          <= '0;
         r_clock          <= 1'b0;
-        r_divide_enabled <= div_i;
+        r_divide_enabled <= div_valid_i ? div_i : r_pending_divide;
+        r_pending_valid  <= 1'b0;
         div_done_o       <= 1'b1;
+      end else if (div_valid_i) begin
+        r_pending_valid  <= 1'b1;
+        r_pending_divide <= div_i;
       end else if (!en_i || !r_divide_enabled) begin
         r_count <= '0;
         r_clock <= 1'b0;

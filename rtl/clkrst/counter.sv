@@ -35,6 +35,10 @@ module rs_counter #(
     output logic                  ovf_o
 );
 
+  initial begin
+    if (DATA_WIDTH < 1) $fatal(1, "rs_counter: DATA_WIDTH must be positive");
+  end
+
   rs_delta_counter #(DATA_WIDTH) u_delta_counter (
       .clk_i,
       .rst_n_i,
@@ -65,6 +69,10 @@ module rs_delta_counter #(
 );
 
   logic [DATA_WIDTH:0] s_cnt_d, s_cnt_q;
+
+  initial begin
+    if (DATA_WIDTH < 1) $fatal(1, "rs_delta_counter: DATA_WIDTH must be positive");
+  end
 
   assign dat_o = s_cnt_q[DATA_WIDTH-1:0];
   assign ovf_o = s_cnt_q[DATA_WIDTH];

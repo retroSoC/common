@@ -15,8 +15,17 @@ module sync_memory #(
 );
   logic [DATA_WIDTH-1:0] r_storage[0:DEPTH-1];
   initial begin
-    if (DATA_WIDTH < 1 || DEPTH < 1) $fatal(1, "sync_memory: invalid geometry");
+    if (DATA_WIDTH < 1 || DEPTH < 1 || ADDR_WIDTH < ((DEPTH > 1) ? $clog2(DEPTH) : 1)) begin
+      $fatal(1, "sync_memory: invalid data, depth, or address geometry");
+    end
   end
+`ifndef SYNTHESIS
+  always_ff @(posedge clk_i) begin
+    if ((write_enable_i || read_enable_i) && int'($unsigned(addr_i)) >= DEPTH) begin
+      $fatal(1, "sync_memory: address %0d exceeds depth %0d", addr_i, DEPTH);
+    end
+  end
+`endif
   always_ff @(posedge clk_i) begin
     if (write_enable_i) r_storage[addr_i] <= write_data_i;
     if (read_enable_i) read_data_o <= r_storage[addr_i];

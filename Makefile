@@ -12,10 +12,11 @@ VERIBLE_FORMAT ?= verible-verilog-format
 VERIBLE_LINT   ?= verible-verilog-lint
 BUILD_DIR      ?= build
 
-TESTS      := bit_ops gray_code fifo stream arbiter address cdc clock memory axi
-RTL_FILES  := $(shell scripts/rtl_files.sh)
-MAKE_FILES := $(shell git ls-files --cached --others --exclude-standard | rg '(^|/)(Makefile|[^/]+\.mk)$$')
-SV_FILES   := $(shell git ls-files --cached --others --exclude-standard | rg '\.sv$$')
+TESTS           := bit_ops gray_code fifo stream arbiter address cdc clock memory axi
+VERILATOR_TESTS := $(TESTS) axi_bfm
+RTL_FILES       := $(shell scripts/rtl_files.sh)
+MAKE_FILES      := $(shell git ls-files --cached --others --exclude-standard | rg '(^|/)(Makefile|[^/]+\.mk)$$')
+SV_FILES        := $(shell git ls-files --cached --others --exclude-standard | rg '\.sv$$')
 
 .PHONY: help doctor format format-check mk-format mk-format-check mk-validate rtl-format rtl-format-check license-check lint test test-iverilog test-verilator synth formal clean
 
@@ -75,12 +76,17 @@ test-iverilog-%:
 	$(IVERILOG) -g2012 -DSV_ASSRT_DISABLE -Wall -s $*_tb -f flist/rtl.f dv/unit/$*_tb.sv -o $(BUILD_DIR)/iverilog/$*_tb
 	$(VVP) $(BUILD_DIR)/iverilog/$*_tb
 
-test-verilator: $(addprefix test-verilator-,$(TESTS))
+test-verilator: $(addprefix test-verilator-,$(VERILATOR_TESTS))
 
 test-verilator-%:
 	@mkdir -p $(BUILD_DIR)/verilator/$*
 	CCACHE_DISABLE=1 $(VERILATOR) --binary --timing -DSV_ASSRT_DISABLE -Wno-fatal -f flist/rtl.f dv/unit/$*_tb.sv --top-module $*_tb --Mdir $(BUILD_DIR)/verilator/$*
 	$(BUILD_DIR)/verilator/$*/V$*_tb
+
+test-verilator-axi_bfm:
+	@mkdir -p $(BUILD_DIR)/verilator/axi_bfm
+	CCACHE_DISABLE=1 $(VERILATOR) --binary --timing -DSV_ASSRT_DISABLE -Wno-fatal -f flist/rtl.f -f flist/verif.f dv/unit/axi_bfm_tb.sv --top-module axi_bfm_tb --Mdir $(BUILD_DIR)/verilator/axi_bfm
+	$(BUILD_DIR)/verilator/axi_bfm/Vaxi_bfm_tb
 
 synth:
 	$(YOSYS) -q -p 'read_verilog -sv rtl/utils/fifo.sv; hierarchy -top fifo; proc; opt; check; stat'
@@ -89,6 +95,8 @@ synth:
 formal:
 	$(SBY) -f formal/fifo.sby
 	$(SBY) -f formal/arbiter.sby
+	$(SBY) -f formal/async_reqack.sby
+	$(SBY) -f formal/stream_replicator.sby
 
 clean:
 	@rm -rf $(BUILD_DIR)

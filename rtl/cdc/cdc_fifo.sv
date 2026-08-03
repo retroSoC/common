@@ -50,6 +50,11 @@ module cdc_fifo #(
 
   logic [BUFFER_DEPTH-1:0][DATA_WIDTH-1:0] s_int_mem;
   logic [LOG_BUFFER_DEPTH:0] s_wr_ptr_gray, s_rd_ptr_gray;
+  logic s_link_rst_n;
+  logic s_src_rst_n;
+  logic s_dst_rst_n;
+  logic s_src_ready;
+  logic s_dst_valid;
 
   initial begin
     if (DATA_WIDTH < 1 || BUFFER_DEPTH < 2 || (BUFFER_DEPTH & (BUFFER_DEPTH - 1)) != 0) begin
@@ -60,12 +65,29 @@ module cdc_fifo #(
     end
   end
 
+  // Gray pointers lose their common history after a unilateral reset. Flush
+  // both sides instead of allowing a stale pointer to expose old data.
+  assign s_link_rst_n = src_rst_n_i && dst_rst_n_i;
+  cdc_reset_barrier #(
+      .STAGES(SYNC_STAGES)
+  ) u_reset_barrier (
+      .clk_a_i  (src_clk_i),
+      .clk_b_i  (dst_clk_i),
+      .rst_n_i  (s_link_rst_n),
+      .release_i(1'b1),
+      .rst_a_n_o(s_src_rst_n),
+      .rst_b_n_o(s_dst_rst_n)
+  );
+
+  assign src_ready_o = s_src_rst_n && s_src_ready;
+  assign dst_valid_o = s_dst_rst_n && s_dst_valid;
+
   cdc_fifo_src #(DATA_WIDTH, BUFFER_DEPTH, SYNC_STAGES) u_cdc_fifo_src (
                   .clk_i         (src_clk_i),
-                  .rst_n_i       (src_rst_n_i),
+                  .rst_n_i       (s_src_rst_n),
                   .data_i        (src_data_i),
                   .valid_i       (src_valid_i),
-                  .ready_o       (src_ready_o),
+                  .ready_o       (s_src_ready),
       (* async *) .async_data_o  (s_int_mem),
       (* async *) .async_wr_ptr_o(s_wr_ptr_gray),
       (* async *) .async_rd_ptr_i(s_rd_ptr_gray)
@@ -73,9 +95,9 @@ module cdc_fifo #(
 
   cdc_fifo_dst #(DATA_WIDTH, BUFFER_DEPTH, SYNC_STAGES) u_cdc_fifo_dst (
                   .clk_i         (dst_clk_i),
-                  .rst_n_i       (dst_rst_n_i),
+                  .rst_n_i       (s_dst_rst_n),
                   .data_o        (dst_data_o),
-                  .valid_o       (dst_valid_o),
+                  .valid_o       (s_dst_valid),
                   .ready_i       (dst_ready_i),
       (* async *) .async_data_i  (s_int_mem),
       (* async *) .async_wr_ptr_i(s_wr_ptr_gray),
