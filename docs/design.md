@@ -32,6 +32,34 @@ each enabled target as targets become ready. `flush_i` cancels a retained item.
 This semantics requires its `clk_i`, `rst_n_i`, and `flush_i` ports; callers of
 the former combinational broadcaster must migrate to the registered interface.
 
+`stream_discard_gate` has no storage. If `discard_i` is asserted, a concurrent
+input valid is accepted locally regardless of downstream ready and is lost by
+definition. `stream_window_guard` counts requests accepted at its forward
+interface and removes one count for every `retire_i`. `retire_i` must not be
+used for same-cycle zero-latency completions and must never be asserted when no
+earlier request is outstanding. A lowered runtime limit blocks new requests but
+does not invalidate requests already counted above the new limit.
+
+`plru_victim_selector` requires a power-of-two number of ways and accepts at
+most one touch per clock. Reset and `flush_i` make way zero the deterministic
+next victim. `peak_delta_counter` retains the maximum extended counter value;
+its peak-overflow output distinguishes a high-water mark above the data-width
+range from a low-width value with the same bit pattern.
+
+SECDED codewords use lower bits for the Hamming positions and the most
+significant bit for overall parity. The decoder corrects only a syndrome with
+odd overall parity. It deliberately does not alter a double-error word, even
+though its extracted data may be corrupt; callers must consume
+`uncorrectable_o`.
+
+`cdc_2phase_warm_flush` and `cdc_fifo_warm_flush` accept `src_clear_i` only
+when `src_clear_busy_o` is low. Their controller sends isolate, reset, and
+resume phases through acknowledged mailbox transfers. During busy, source ready
+is low; destination valid may be withdrawn while the link is isolated. A warm
+flush aborts all pre-clear in-flight data, including a destination item that
+has not handshaken. The controller supports a source initiator only; reverse
+direction integration is achieved by swapping the endpoint roles.
+
 `axi4_addr_gen` supports FIXED, INCR, and legal AXI WRAP lengths (2, 4, 8, or
 16 beats). A malformed WRAP length falls back to INCR behavior rather than
 constructing an invalid bit mask. This primitive works on page offsets only and

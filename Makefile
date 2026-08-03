@@ -12,11 +12,11 @@ VERIBLE_FORMAT ?= verible-verilog-format
 VERIBLE_LINT   ?= verible-verilog-lint
 BUILD_DIR      ?= build
 
-TESTS           := bit_ops gray_code fifo stream arbiter address cdc clock memory axi
+TESTS           := bit_ops gray_code fifo stream stream_control base_ext ecc arbiter address cdc cdc_flush clock memory axi
 VERILATOR_TESTS := $(TESTS) axi_bfm
 RTL_FILES       := $(shell scripts/rtl_files.sh)
-MAKE_FILES      := $(shell git ls-files --cached --others --exclude-standard | rg '(^|/)(Makefile|[^/]+\.mk)$$')
-SV_FILES        := $(shell git ls-files --cached --others --exclude-standard | rg '\.sv$$')
+MAKE_FILES      := $(shell git ls-files --cached --others --exclude-standard | rg '(^|/)(Makefile|[^/]+\.mk)$$' | while IFS= read -r file; do test -f "$$file" && printf '%s\n' "$$file"; done)
+SV_FILES        := $(shell git ls-files --cached --others --exclude-standard | rg '\.sv$$' | while IFS= read -r file; do test -f "$$file" && printf '%s\n' "$$file"; done)
 
 .PHONY: help doctor format format-check mk-format mk-format-check mk-validate rtl-format rtl-format-check license-check lint test test-iverilog test-verilator synth formal clean
 
@@ -91,12 +91,20 @@ test-verilator-axi_bfm:
 synth:
 	$(YOSYS) -q -p 'read_verilog -sv rtl/utils/fifo.sv; hierarchy -top fifo; proc; opt; check; stat'
 	$(YOSYS) -q -p 'read_verilog -sv rtl/base/bit_ops.sv rtl/stream/round_robin_arbiter.sv; hierarchy -top round_robin_arbiter; proc; opt; check; stat'
+	$(YOSYS) -q -p 'read_verilog -sv rtl/base/ecc_secded.sv; hierarchy -top secded_decode; proc; opt; check; stat'
+	$(YOSYS) -q -p 'read_verilog -Irtl -sv -DSYNTHESIS formal/dffr_model.sv rtl/base/bit_ops.sv rtl/base/replacement.sv; hierarchy -top plru_victim_selector; proc; opt; check; stat'
+	$(YOSYS) -q -p 'read_verilog -sv -DSYNTHESIS rtl/stream/stream_control.sv; hierarchy -top stream_window_guard; proc; opt; check; stat'
+	$(YOSYS) -q -p 'read_verilog -Irtl -sv -DSYNTHESIS formal/dffr_model.sv rtl/cdc/cdc_sync.sv rtl/clkrst/rst_sync.sv rtl/cdc/cdc_rst_ctrlr.sv rtl/cdc/async_reqack.sv rtl/cdc/cdc_2phase.sv rtl/cdc/cdc_warm_flush.sv; hierarchy -top cdc_2phase_warm_flush; proc; opt; check; stat'
 
 formal:
 	$(SBY) -f formal/fifo.sby
 	$(SBY) -f formal/arbiter.sby
 	$(SBY) -f formal/async_reqack.sby
 	$(SBY) -f formal/stream_replicator.sby
+	$(SBY) -f formal/secded.sby
+	$(SBY) -f formal/plru.sby
+	$(SBY) -f formal/stream_window.sby
+	$(SBY) -f formal/cdc_warm_flush.sby
 
 clean:
 	@rm -rf $(BUILD_DIR)

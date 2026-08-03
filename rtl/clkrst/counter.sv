@@ -100,3 +100,83 @@ module rs_delta_counter #(
   );
 
 endmodule
+
+// Delta counter with a separate high-water mark. The counter state itself is
+// provided by rs_delta_counter; the peak uses the same next-state arithmetic so
+// an increment is reflected in peak_o on the same clock edge.
+module peak_delta_counter #(
+    parameter int DATA_WIDTH = 4
+) (
+    input  logic                  clk_i,
+    input  logic                  rst_n_i,
+    input  logic                  flush_i,
+    input  logic                  clear_value_i,
+    input  logic                  clear_peak_i,
+    input  logic                  enable_i,
+    input  logic                  load_i,
+    input  logic                  subtract_i,
+    input  logic [DATA_WIDTH-1:0] step_i,
+    input  logic [DATA_WIDTH-1:0] load_value_i,
+    output logic [DATA_WIDTH-1:0] value_o,
+    output logic [DATA_WIDTH-1:0] peak_o,
+    output logic                  value_overflow_o,
+    output logic                  peak_overflow_o
+);
+  logic [DATA_WIDTH:0] s_value_next;
+  logic [DATA_WIDTH:0] s_peak_next;
+  logic [DATA_WIDTH:0] r_peak;
+
+  initial begin
+    if (DATA_WIDTH < 1) $fatal(1, "peak_delta_counter: DATA_WIDTH must be positive");
+  end
+
+  rs_delta_counter #(
+      .DATA_WIDTH(DATA_WIDTH)
+  ) u_value_counter (
+      .clk_i  (clk_i),
+      .rst_n_i(rst_n_i),
+      .clr_i  (flush_i || clear_value_i),
+      .en_i   (enable_i),
+      .load_i (load_i),
+      .down_i (subtract_i),
+      .delta_i(step_i),
+      .dat_i  (load_value_i),
+      .dat_o  (value_o),
+      .ovf_o  (value_overflow_o)
+  );
+
+  always_comb begin
+    s_value_next = {value_overflow_o, value_o};
+    if (flush_i || clear_value_i) begin
+      s_value_next = '0;
+    end else if (load_i) begin
+      s_value_next = {1'b0, load_value_i};
+    end else if (enable_i) begin
+      if (subtract_i) begin
+        s_value_next = {value_overflow_o, value_o} - step_i;
+      end else begin
+        s_value_next = {value_overflow_o, value_o} + step_i;
+      end
+    end
+
+    if (flush_i || clear_peak_i) begin
+      s_peak_next = '0;
+    end else if (s_value_next > r_peak) begin
+      s_peak_next = s_value_next;
+    end else begin
+      s_peak_next = r_peak;
+    end
+  end
+
+  dffr #(
+      .DATA_WIDTH(DATA_WIDTH + 1)
+  ) u_peak_state (
+      .clk_i  (clk_i),
+      .rst_n_i(rst_n_i),
+      .dat_i  (s_peak_next),
+      .dat_o  (r_peak)
+  );
+
+  assign peak_o          = r_peak[DATA_WIDTH-1:0];
+  assign peak_overflow_o = r_peak[DATA_WIDTH];
+endmodule

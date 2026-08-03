@@ -1,0 +1,14 @@
+[options]
+mode prove
+depth 2
+
+[engines]
+smtbmc bitwuzla
+
+[script]
+read -formal -sv ecc_secded.sv secded_formal.sv
+prep -top secded_formal
+
+[files]
+rtl/base/ecc_secded.sv
+formal/secded_formal.sv

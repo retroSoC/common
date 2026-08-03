@@ -1,0 +1,21 @@
+[options]
+mode bmc
+depth 96
+
+[engines]
+smtbmc bitwuzla
+
+[script]
+read -formal -sv -DSYNTHESIS -I. dffr_model.sv cdc_sync.sv rst_sync.sv cdc_rst_ctrlr.sv async_reqack.sv cdc_2phase.sv cdc_warm_flush.sv cdc_warm_flush_formal.sv
+prep -top cdc_warm_flush_formal
+
+[files]
+formal/dffr_model.sv
+rtl/config.svh
+rtl/cdc/cdc_sync.sv
+rtl/clkrst/rst_sync.sv
+rtl/cdc/cdc_rst_ctrlr.sv
+rtl/cdc/async_reqack.sv
+rtl/cdc/cdc_2phase.sv
+rtl/cdc/cdc_warm_flush.sv
+formal/cdc_warm_flush_formal.sv

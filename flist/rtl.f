@@ -10,8 +10,11 @@ rtl/utils/shift_reg.sv
 rtl/utils/spill_register.sv
 rtl/utils/regfield.sv
 rtl/base/bit_ops.sv
+rtl/base/replacement.sv
+rtl/base/ecc_secded.sv
 rtl/stream/round_robin_arbiter.sv
 rtl/stream/stream_cells.sv
+rtl/stream/stream_control.sv
 rtl/tech/stdcell.sv
 rtl/tech/ram.sv
 rtl/tech/regfile.sv
@@ -26,5 +29,6 @@ rtl/cdc/cdc_2phase.sv
 rtl/cdc/cdc_fifo.sv
 rtl/cdc/async_reqack.sv
 rtl/cdc/cdc_rst_ctrlr.sv
+rtl/cdc/cdc_warm_flush.sv
 rtl/bus/address_decode.sv
 rtl/interface/axi4_addr_gen.sv

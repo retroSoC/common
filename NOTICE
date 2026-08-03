@@ -22,11 +22,18 @@ architecture is derived from, or materially informed by, PULP common_cells:
 - rtl/cdc/async_reqack.sv
 - rtl/clock/clock_divider.sv
 - rtl/clock/safe_clock_mux.sv
+- rtl/base/replacement.sv (origin: src/cc_plru_tree.sv)
+- rtl/base/ecc_secded.sv (origin: src/cc_ecc_encode.sv, src/cc_ecc_decode.sv)
+- rtl/stream/stream_control.sv (origin: src/cc_stream_filter.sv, src/cc_stream_throttle.sv)
+- rtl/cdc/cdc_warm_flush.sv (origin: src/cc_cdc_reset_ctrlr.sv,
+  src/cc_cdc_2phase_clearable.sv, src/cc_cdc_fifo_gray_clearable.sv)
 
 These components were adapted or independently reimplemented to keep common
 self-contained. They intentionally do not expose PULP `cc_*` names or preserve
 upstream signal/variable identifiers. The original copyright and license URL
 remain in the affected source files, which also carry an SHL-0.51 SPDX marker.
+The reference snapshot for the four additions above is common_cells commit
+63b7c50d43e462b59506f69d341ff1e40202866d (v2.0.0-beta.3).
 
 lowRISC register field material
 -------------------------------

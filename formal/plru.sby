@@ -1,0 +1,16 @@
+[options]
+mode prove
+depth 12
+
+[engines]
+smtbmc bitwuzla
+
+[script]
+read -formal -sv -DSYNTHESIS dffr_model.sv bit_ops.sv replacement.sv plru_formal.sv
+prep -top plru_formal
+
+[files]
+formal/dffr_model.sv
+rtl/base/bit_ops.sv
+rtl/base/replacement.sv
+formal/plru_formal.sv

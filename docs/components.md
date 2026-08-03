@@ -4,6 +4,11 @@
 
 - `bit_count`, `leading_zero_count`, `onehot_check`, and `onehot_to_index` are
   combinational bit primitives.
+- `plru_victim_selector` is a power-of-two cache-way replacement tree. It
+  accepts zero or one-hot touches and emits a deterministic one-hot victim.
+- `secded_encode` and `secded_decode` implement parameterized extended-Hamming
+  SECDED. A codeword single-bit fault is corrected, an overall-parity-bit fault
+  is reported without changing data, and a double-bit fault is uncorrectable.
 - `round_robin_arbiter` provides fair, transfer-driven arbitration.
 - `bypass_buffer`, `stream_buffer`, `stream_selector`, `stream_router`,
   `stream_replicator`, `stream_collector`, and `stream_credit_limiter` use a
@@ -12,6 +17,13 @@
   and target mask, so enabled outputs may complete in different cycles but
   each receives exactly one transfer. Its input is backpressured until all
   selected targets complete; `flush_i` cancels the retained item.
+- `stream_discard_gate` consumes an input without presenting it downstream
+  while `discard_i` is high. `stream_window_guard` limits in-flight requests;
+  `retire_i` must represent a completion for a previously accepted request.
+  Its runtime limit is clamped to the elaborated maximum.
+- `peak_delta_counter` combines a programmable up/down counter with a separate
+  high-water mark. It records the updated count on the same edge as an enabled
+  increment, load, or decrement.
 - `fifo` and its legacy `stream_fifo` wrapper are power-of-two synchronous
   queues. A full queue may push and pop on the same edge. Their asynchronous
   read contract maps to registers in generic Yosys synthesis; use a technology
@@ -28,6 +40,10 @@
   queues abort in-flight transactions when either endpoint resets.
 - `cdc_reset_barrier` asynchronously asserts reset and synchronizes release in
   its two supplied clock domains.
+- `cdc_2phase_warm_flush` and `cdc_fifo_warm_flush` add a source-initiated,
+  acknowledged warm-clear sequence around the existing CDC cells. They isolate
+  both interfaces before resetting state, abort in-flight data, and expose busy
+  outputs until recovery completes.
 
 ## Clock, address, and memory
 

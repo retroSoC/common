@@ -1,0 +1,14 @@
+[options]
+mode prove
+depth 20
+
+[engines]
+smtbmc bitwuzla
+
+[script]
+read -formal -sv -DSYNTHESIS stream_control.sv stream_window_formal.sv
+prep -top stream_window_formal
+
+[files]
+rtl/stream/stream_control.sv
+formal/stream_window_formal.sv

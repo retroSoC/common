@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "toolchains": {
+    "ubuntu-22.04": {
+      "verilator": {
+        "version": "5.046",
+        "url": "https://github.com/retroSoC/artifact/releases/download/verilator-v5.046/verilator-v5.046-ubuntu-22.04-gcc.tar.gz",
+        "sha256": "17e88e100e82b9450040dabee7efaf49a834e8736fda4bbe1036aecd1c4aeb57",
+        "archive": "verilator-v5.046-ubuntu-22.04-gcc.tar.gz",
+        "path": "bin"
+      },
+      "verible": {
+        "version": "v0.0-3946-g851d3ff4",
+        "url": "https://github.com/chipsalliance/verible/releases/download/v0.0-3946-g851d3ff4/verible-v0.0-3946-g851d3ff4-linux-static-x86_64.tar.gz",
+        "sha256": "be81036ab5a3d5d5ba4ee677ebf9a09665779c3bd99ffe2e161c5025beaa1f16",
+        "archive": "verible-v0.0-3946-g851d3ff4-linux-static-x86_64.tar.gz",
+        "path": "verible-v0.0-3946-g851d3ff4/bin"
+      },
+      "iverilog": {
+        "version": "13.0",
+        "url": "https://github.com/retroSoC/artifact/releases/download/iverilog-v13_0/iverilog-v13_0-ubuntu-22.04-gcc.tar.gz",
+        "sha256": "16fe3ce5ce7b16cc3e8d7d3756c4f9ad02f678a8f81bb43dd9473bde2e7fc81b",
+        "archive": "iverilog-v13_0-ubuntu-22.04-gcc.tar.gz",
+        "path": "bin"
+      },
+      "yosys": {
+        "version": "0.67",
+        "url": "https://github.com/retroSoC/artifact/releases/download/yosys-v0.67/yosys-v0.67-ubuntu-22.04-gcc.tar.gz",
+        "sha256": "272b5060e5c5d8c8830e2d4efd8d88f388fe39e152136bd99c293e718a91c1a7",
+        "archive": "yosys-v0.67-ubuntu-22.04-gcc.tar.gz",
+        "path": "bin"
+      },
+      "sby": {
+        "version": "0.67",
+        "url": "https://github.com/retroSoC/artifact/releases/download/sby-v0.67/sby-v0.67-ubuntu-22.04.tar.gz",
+        "sha256": "f97053fa43d01e9e343fd459e9a42424d31277204f2b0f19f00bbead657a7e3a",
+        "archive": "sby-v0.67-ubuntu-22.04.tar.gz",
+        "path": "bin"
+      },
+      "bitwuzla": {
+        "version": "0.9.1",
+        "url": "https://github.com/retroSoC/artifact/releases/download/bitwuzla-0.9.1/bitwuzla-0.9.1-ubuntu-22.04-gcc.tar.gz",
+        "sha256": "1f4a4c3f173ebb398628a033a867e0370694151223f2761eaaf9cba9e83ff996",
+        "archive": "bitwuzla-0.9.1-ubuntu-22.04-gcc.tar.gz",
+        "path": "bin"
+      }
+    }
+  }
+}
