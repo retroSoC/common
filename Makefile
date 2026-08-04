@@ -18,7 +18,7 @@ RTL_FILES       := $(shell scripts/rtl_files.sh)
 MAKE_FILES      := $(shell git ls-files --cached --others --exclude-standard | rg '(^|/)(Makefile|[^/]+\.mk)$$' | while IFS= read -r file; do test -f "$$file" && printf '%s\n' "$$file"; done)
 SV_FILES        := $(shell git ls-files --cached --others --exclude-standard | rg '\.sv$$' | while IFS= read -r file; do test -f "$$file" && printf '%s\n' "$$file"; done)
 
-.PHONY: help doctor format format-check mk-format mk-format-check mk-validate rtl-format rtl-format-check license-check lint test test-iverilog test-verilator synth formal clean
+.PHONY: help doctor format format-check mk-format mk-format-check mk-validate rtl-format rtl-format-check docs-check license-check lint test test-iverilog test-verilator synth formal clean
 
 help:
 	@printf '%s\n' \
@@ -27,6 +27,7 @@ help:
 	  '  format | format-check                 apply/check Makefile and RTL formatting' \
 	  '  mk-format | mk-format-check           apply/check tracked Makefile formatting with mbake' \
 	  '  mk-validate                           validate Makefile with GNU make via mbake' \
+	  '  docs-check                            validate component-reference documentation coverage' \
 	  '  rtl-format | rtl-format-check         apply/check tracked SystemVerilog formatting' \
 	  '  license-check                         verify SystemVerilog license headers' \
 	  '  lint                                  run Verible and Verilator lint' \
@@ -53,6 +54,9 @@ mk-format-check:
 
 mk-validate:
 	$(MBAKE) validate --config .bake.toml Makefile
+
+docs-check:
+	bash scripts/check_component_docs.sh
 
 rtl-format:
 	$(VERIBLE_FORMAT) --flagfile=.verible-format --failsafe_success=false --inplace $(SV_FILES)

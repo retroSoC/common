@@ -1,5 +1,11 @@
 # Component Catalog
 
+The repository [README](../README.md#component-reference) is the canonical,
+machine-checked catalog for every declared RTL unit. Each entry links to a
+page in [`docs/reference`](reference/README.md) with its exact declaration,
+functional behavior, suitable applications, integration constraints, and use
+fragment. This document is retained as a curated family-level overview.
+
 ## Base and stream
 
 - `bit_count`, `leading_zero_count`, `onehot_check`, and `onehot_to_index` are

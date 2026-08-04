@@ -11,6 +11,9 @@ library, SoC repository, or verification package outside this tree.
 - `rtl/utils`, `rtl/clkrst`, `rtl/tech`, and `rtl/interface` retain compatible
   interfaces for existing IP. Do not remove or rename these paths without a
   release-note migration plan.
+- `docs/reference` contains one generated, checked-in Markdown page for every
+  declared RTL `module`, `interface`, and `package`. Update its renderer and
+  regenerate the pages whenever a public declaration or its contract changes.
 - `dv/unit` contains self-checking simulation tests. `formal` contains bounded
   property checks. Generated artifacts belong under `build/` only.
 
@@ -34,6 +37,7 @@ Run the following before submitting a change:
 ```sh
 make format-check
 make mk-validate
+make docs-check
 make license-check
 make lint
 make test-iverilog

@@ -5,6 +5,11 @@ and are verified with Icarus Verilog and Verilator. The portable behavioral
 storage models are for simulation, FPGA prototyping, and generic synthesis;
 ASIC projects must replace `tech_*` models through their technology flow.
 
+The per-component integration reference is in [`docs/reference`](reference/README.md).
+Each page contains the exact declaration, functional behavior, application
+guidance, use fragment, and component-specific constraints. This datasheet and
+[`docs/design.md`](design.md) define contracts shared across component families.
+
 The source list additionally contains the self-contained base replacement and
 SECDED cells, stream-control cells, and warm-flush CDC wrappers. They depend
 only on RTL files in this repository. The SECDED package is ordered before its

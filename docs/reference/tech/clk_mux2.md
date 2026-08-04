@@ -1,0 +1,64 @@
+# clk_mux2
+
+| Property | Value |
+| --- | --- |
+| Kind | `module` |
+| RTL source | [`rtl/tech/stdcell.sv`](../../../rtl/tech/stdcell.sv) |
+| Availability | Technology model; replace in an ASIC technology flow |
+
+## Summary
+
+Behavioral two-input clock mux model.
+
+## Functional Behavior
+
+Behavioral two-input clock mux model. It supplies portable functional behavior or a backend substitution hook, not characterized silicon timing or power behavior.
+
+## Suitable Applications
+
+Use for simulation, generic synthesis, FPGA prototyping, and technology-independent elaboration.
+
+## Parameters
+
+This unit has no configurable parameters.
+
+## Interface Definition
+
+```systemverilog
+module clk_mux2 (
+    input  logic clk1_i,
+    input  logic clk2_i,
+    input  logic en_i,
+    output logic clk_o
+);
+```
+
+
+### Port Summary
+
+| Signal | Direction | Declaration |
+| --- | --- | --- |
+| `clk1_i` | `input` | `input  logic clk1_i` |
+| `clk2_i` | `input` | `input  logic clk2_i` |
+| `en_i` | `input` | `input  logic en_i` |
+| `clk_o` | `output` | `output logic clk_o` |
+
+## Integration and Use
+
+Replace it through the target technology flow before ASIC tape-out. Treat its active-low controls and backend macros as part of the integration contract.
+
+```systemverilog
+clk_mux2 u_clk_mux2 (
+    .clk1_i(clk1_i),
+    .clk2_i(clk2_i),
+    .en_i(en_i),
+    .clk_o(clk_o)
+);
+```
+
+## Dependencies and Verification
+
+The linked RTL source is the implementation authority and contains local assertions for unsupported
+parameter combinations. See [`docs/design.md`](../../design.md) for repository-wide CDC, reset,
+stream, and storage contracts, and [`docs/verification.md`](../../verification.md) for the
+verification matrix.

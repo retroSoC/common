@@ -1,5 +1,9 @@
 # Design Contracts
 
+This document records contracts shared across component families. For a
+component's exact declaration, local behavior, use fragment, and integration
+constraints, start at [`docs/reference`](reference/README.md).
+
 Every component documents its reset and transfer contracts in the source.
 Reset assertion may be asynchronous where `rst_n_i` is used; reset release is
 synchronized only by the explicit reset/CDC components. Do not treat reset
