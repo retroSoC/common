@@ -15,8 +15,25 @@ interface ribp_if ();
   logic [ 3:0] wstrb;
   logic [31:0] rdata;
   logic        ready;
+  logic        resp_err;
 
-  modport slave(input valid, input addr, input wdata, input wstrb, output rdata, output ready);
-  modport master(output valid, output addr, output wdata, output wstrb, input rdata, input ready);
+  modport slave(
+      input valid,
+      input addr,
+      input wdata,
+      input wstrb,
+      output rdata,
+      output ready,
+      output resp_err
+  );
+  modport master(
+      output valid,
+      output addr,
+      output wdata,
+      output wstrb,
+      input rdata,
+      input ready,
+      input resp_err
+  );
 
 endinterface
