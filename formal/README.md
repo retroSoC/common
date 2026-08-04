@@ -1,7 +1,8 @@
 # Formal Checks
 
-The formal targets use SymbiYosys prove mode with open-source Yosys and
-Bitwuzla. Run all checked targets with `make formal`.
+The formal targets use SymbiYosys with open-source Yosys and Bitwuzla. Most
+targets use induction-based proof; `stream_queue.sby` is an explicit 32-step
+bounded model check. Run all checked targets with `make formal`.
 
 The checked properties include:
 
@@ -11,6 +12,8 @@ The checked properties include:
   any single protected-bit error.
 - PLRU victim one-hot validity under reset and legal replacement touches.
 - Outstanding-window bounds, runtime limit behavior, and flush behavior.
+- Stream-queue occupancy bounds and output stability across backpressure under
+  the standard ready/valid source-stability assumption.
 - A bounded, same-frequency warm-flush transaction: isolation rejects new
   traffic, pre-flush data is not released after recovery, and post-flush data
   transfers correctly.

@@ -1,0 +1,14 @@
+[options]
+mode bmc
+depth 32
+
+[engines]
+smtbmc bitwuzla
+
+[script]
+read -formal -sv stream_advanced.sv stream_queue_formal.sv
+prep -top stream_queue_formal
+
+[files]
+rtl/stream/stream_advanced.sv
+formal/stream_queue_formal.sv

@@ -12,7 +12,7 @@ VERIBLE_FORMAT ?= verible-verilog-format
 VERIBLE_LINT   ?= verible-verilog-lint
 BUILD_DIR      ?= build
 
-TESTS           := bit_ops gray_code fifo stream stream_control base_ext ecc arbiter address cdc cdc_flush clock memory axi
+TESTS           := bit_ops gray_code fifo stream stream_control base_ext extended_base stream_extended structures ecc arbiter address cdc cdc_advanced cdc_flush clock memory axi
 VERILATOR_TESTS := $(TESTS) axi_bfm
 RTL_FILES       := $(shell scripts/rtl_files.sh)
 MAKE_FILES      := $(shell git ls-files --cached --others --exclude-standard | rg '(^|/)(Makefile|[^/]+\.mk)$$' | while IFS= read -r file; do test -f "$$file" && printf '%s\n' "$$file"; done)
@@ -62,6 +62,7 @@ rtl-format-check:
 
 license-check:
 	scripts/check_license_headers.sh $(SV_FILES)
+	scripts/check_pulp_manifest.sh
 
 lint:
 	$(VERIBLE_LINT) --ruleset=none --rules_config=.verible-lint $(RTL_FILES)
@@ -92,6 +93,10 @@ synth:
 	$(YOSYS) -q -p 'read_verilog -sv rtl/utils/fifo.sv; hierarchy -top fifo; proc; opt; check; stat'
 	$(YOSYS) -q -p 'read_verilog -sv rtl/base/bit_ops.sv rtl/stream/round_robin_arbiter.sv; hierarchy -top round_robin_arbiter; proc; opt; check; stat'
 	$(YOSYS) -q -p 'read_verilog -sv rtl/base/ecc_secded.sv; hierarchy -top secded_decode; proc; opt; check; stat'
+	$(YOSYS) -q -p 'read_verilog -sv rtl/base/mask_cells.sv; hierarchy -top interval_ones_mask; proc; opt; check; stat'
+	$(YOSYS) -q -p 'read_verilog -sv rtl/base/hash_cells.sv; hierarchy -top permutation_hash; proc; opt; check; stat'
+	$(YOSYS) -q -p 'read_verilog -sv rtl/bus/address_advanced.sv; hierarchy -top address_set_decoder; proc; opt; check; stat'
+	$(YOSYS) -q -p 'read_verilog -sv rtl/stream/stream_advanced.sv; hierarchy -top stream_queue; proc; opt; check; stat'
 	$(YOSYS) -q -p 'read_verilog -Irtl -sv -DSYNTHESIS formal/dffr_model.sv rtl/base/bit_ops.sv rtl/base/replacement.sv; hierarchy -top plru_victim_selector; proc; opt; check; stat'
 	$(YOSYS) -q -p 'read_verilog -sv -DSYNTHESIS rtl/stream/stream_control.sv; hierarchy -top stream_window_guard; proc; opt; check; stat'
 	$(YOSYS) -q -p 'read_verilog -Irtl -sv -DSYNTHESIS formal/dffr_model.sv rtl/cdc/cdc_sync.sv rtl/clkrst/rst_sync.sv rtl/cdc/cdc_rst_ctrlr.sv rtl/cdc/async_reqack.sv rtl/cdc/cdc_2phase.sv rtl/cdc/cdc_warm_flush.sv; hierarchy -top cdc_2phase_warm_flush; proc; opt; check; stat'
@@ -104,6 +109,7 @@ formal:
 	$(SBY) -f formal/secded.sby
 	$(SBY) -f formal/plru.sby
 	$(SBY) -f formal/stream_window.sby
+	$(SBY) -f formal/stream_queue.sby
 	$(SBY) -f formal/cdc_warm_flush.sby
 
 clean:

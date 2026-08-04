@@ -28,6 +28,21 @@
   queues. A full queue may push and pop on the same edge. Their asynchronous
   read contract maps to registers in generic Yosys synthesis; use a technology
   FIFO macro or a registered-read wrapper for large storage.
+- `prefix_ones_mask`, `interval_ones_mask`, `trailing_zero_count`, and
+  `index_to_onehot` complete the common combinational mask/index toolbox.
+  `credit_pool`, `loop_trip_counter`, `retry_backoff`,
+  `stable_level_filter`, and `sample_majority_filter` are control-plane
+  primitives. `counting_bloom_filter` is non-cryptographic and may report
+  false positives; counter saturation is explicit through `saturated_o`.
+- `stream_elastic_register` is a one-entry elastic stage; `stream_queue` is an
+  arbitrary-depth queue with optional fall-through; `latest_value_stream`
+  accepts a valid-only source and retains the newest pending value. The stream
+  fabric adds `stream_fair_arbiter`, `stream_crossbar`,
+  `stream_shuffle_network`, and `memory_response_bridge`.
+- `tag_order_queue` preserves FIFO order within each tag, `circular_store`
+  offers sequential writes with bounded random reads, and
+  `memory_bank_adapter_detail` splits a single request over banks while
+  gathering one response from each bank.
 
 ## CDC and reset
 
@@ -44,6 +59,14 @@
   acknowledged warm-clear sequence around the existing CDC cells. They isolate
   both interfaces before resetting state, abort in-flight data, and expose busy
   outputs until recovery completes.
+- `four_phase_mailbox` and `cdc_event_bridge` expose data and event forms of
+  the existing four-phase mailbox. `clearable_two_phase_link` and
+  `clearable_async_queue` accept a clear from either endpoint and treat it as
+  an abort. A destination-side clear is retained by a four-phase request
+  mailbox before the source-side coordinated flush begins, so a short pulse is
+  not silently lost. `isochronous_handshake` and `isochronous_stream_buffer`
+  require a fixed STA-constrained clock relationship and are not general CDC
+  cells.
 
 ## Clock, address, and memory
 
@@ -62,3 +85,6 @@
   retain their historical active-low controls and are deterministic models.
   Their simulation models reject active out-of-range addresses, including for
   non-power-of-two depths; this check is excluded from synthesis.
+- `clock_or_tree` combines already-safe gated clocks only. `ready_valid_if`
+  is an optional monitor/source/sink interface; component RTL continues to use
+  explicit ports for Icarus and Verilator compatibility.

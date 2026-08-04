@@ -60,3 +60,8 @@ PULP common_cells-inspired or derived code must keep the original copyright,
 Solderpad Hardware License notice, SPDX tag, and an entry in `NOTICE`. Do not
 reuse upstream `cc_*` component names or identifiers. Code derived from other
 projects follows the same rule and must be recorded in `NOTICE`.
+
+The active PULP source coverage is recorded in
+`licenses/pulp_common_cells_manifest.tsv`. When adding or changing a mapped
+component, update that manifest and run `scripts/check_pulp_manifest.sh` via
+`make license-check`; do not add upstream deprecated compatibility wrappers.

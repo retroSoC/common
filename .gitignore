@@ -5,5 +5,7 @@ build/
 *.log
 formal/*/engine_*
 formal/*/model/
+formal/*/
 formal/fifo/
 formal/arbiter/
+formal/stream_queue/

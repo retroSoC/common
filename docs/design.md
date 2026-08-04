@@ -16,6 +16,16 @@ own valid/ready handshake. The mailbox stores that data internally until the
 destination accepts it exactly once; it then completes the four-phase return
 to zero without reasserting destination valid.
 
+`cdc_event_bridge` accepts an event only when `source_ready_o` is high.
+`clearable_two_phase_link` and `clearable_async_queue` make either endpoint's
+clear visible to both sides and isolate external handshakes; clear aborts
+in-flight data. A destination clear is converted into a retained four-phase
+request before the source-side flush controller accepts it, rather than being
+sampled as an asynchronous pulse. Assert either clear only while its busy
+output is low. `isochronous_*` modules intentionally contain no metastability
+synchronizers and require clocks with a fixed integer ratio plus complete STA
+coverage of every crossing path.
+
 All queue depths that use binary pointer truncation must be powers of two. The
 implementation fails fast during simulation when an unsupported parameter set
 is instantiated. Storage contents are intentionally not reset; after reset the
@@ -25,6 +35,18 @@ The base `fifo` intentionally presents the head word combinationally. This
 keeps the legacy zero-latency interface but prevents generic tools from
 inferring a synchronous block RAM. Large queue users should use their
 technology FIFO macro behind a documented compatible wrapper.
+
+`stream_queue` may pass a word directly through when empty and
+`FALL_THROUGH=1`; otherwise its output remains stable until accepted.
+`latest_value_stream` has no upstream ready signal and can drop intermediate
+updates only after retaining two words; it never changes the current stalled
+output word. `memory_response_bridge` and `memory_bank_adapter_detail` bound
+outstanding requests by their response storage and reject unsupported response
+overflow rather than silently losing data.
+
+`tag_order_queue` uses a shared linked-node pool and preserves order only among
+equal tags. `circular_store` permits reads only between its retirement and
+write pointers; advancing beyond the write pointer is an integration error.
 
 `stream_replicator` is a registered, one-item distributor. It samples payload
 and `enable_i` on the input handshake, then delivers that item exactly once to
