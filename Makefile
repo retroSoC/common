@@ -67,6 +67,7 @@ rtl-format-check:
 license-check:
 	scripts/check_license_headers.sh $(SV_FILES)
 	scripts/check_pulp_manifest.sh
+	bash scripts/check_license_docs.sh
 
 lint:
 	$(VERIBLE_LINT) --ruleset=none --rules_config=.verible-lint $(RTL_FILES)

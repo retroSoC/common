@@ -65,6 +65,11 @@ Solderpad Hardware License notice, SPDX tag, and an entry in `NOTICE`. Do not
 reuse upstream `cc_*` component names or identifiers. Code derived from other
 projects follows the same rule and must be recorded in `NOTICE`.
 
+When third-party provenance or licensing changes, update `README.md`,
+`NOTICE`, and `licenses/README.md` together. Preserve the exact source-file
+SPDX identifier, including exceptions such as `Apache-2.0 WITH SHL-2.1`, and
+run `make license-check` to validate public notices as well as source headers.
+
 The active PULP source coverage is recorded in
 `licenses/pulp_common_cells_manifest.tsv`. When adding or changing a mapped
 component, update that manifest and run `scripts/check_pulp_manifest.sh` via

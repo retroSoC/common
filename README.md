@@ -35,6 +35,21 @@ The repository is licensed under Mulan PSL v2 unless an individual source file
 states another compatible upstream license. Third-party attributions and license
 notices are recorded in `NOTICE` and `licenses/`.
 
+## Third-Party Notices
+
+The repository-level [Mulan PSL v2 license](LICENSE) applies unless an
+individual source file declares a compatible upstream license. Per-file
+copyright and SPDX notices take precedence. The following table is a concise
+attribution guide; [`NOTICE`](NOTICE),
+[`licenses/README.md`](licenses/README.md), and source headers are the
+authoritative records.
+
+| Material | Copyright and license | Affected scope and authoritative record |
+| --- | --- | --- |
+| [PULP platform common_cells](https://github.com/pulp-platform/common_cells) | ETH Zurich and University of Bologna; individual source notices identify additional authors. `SHL-0.51`. | PULP-derived RTL carrying that SPDX identifier. The complete source-to-component mapping and reference snapshot are in [`licenses/pulp_common_cells_manifest.tsv`](licenses/pulp_common_cells_manifest.tsv) and [`NOTICE`](NOTICE). |
+| PULP common_cells signal helpers | ETH Zurich, University of Bologna, EPFL, and OpenHW Group. `Apache-2.0 WITH SHL-2.1`. | [`rtl/base/signal_helpers.sv`](rtl/base/signal_helpers.sv), derived from PULP `cc_read` and `cc_unread`; see its exact source header and [`NOTICE`](NOTICE). |
+| [lowRISC OpenTitan](https://github.com/lowRISC/opentitan) register field material | lowRISC contributors. `Apache-2.0`. | [`rtl/utils/regfield.sv`](rtl/utils/regfield.sv); see [`NOTICE`](NOTICE). |
+
 <!-- COMPONENT_REFERENCE:START -->
 
 ## Component Reference

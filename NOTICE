@@ -1,8 +1,8 @@
 common third-party notices
 ==========================
 
-PULP platform common_cells concepts and compatible source material
----------------------------------------------------------------
+PULP platform common_cells material under SHL-0.51
+---------------------------------------------------
 Origin: https://github.com/pulp-platform/common_cells
 License: Solderpad Hardware License, Version 0.51 (SHL-0.51)
 Copyright: ETH Zurich and University of Bologna; individual file notices name
@@ -34,7 +34,6 @@ architecture is derived from, or materially informed by, PULP common_cells:
 - rtl/base/control_cells.sv (origin: src/cc_credit_counter.sv,
   src/cc_trip_counter.sv, src/cc_exp_backoff.sv, src/cc_serial_deglitch.sv,
   src/cc_majority_vote_filter.sv)
-- rtl/base/signal_helpers.sv (origin: src/cc_read.sv, src/cc_unread.sv)
 - rtl/bus/address_advanced.sv (origin: src/cc_addr_decode.sv,
   src/cc_addr_decode_dync.sv, src/cc_multiaddr_decode.sv)
 - rtl/stream/stream_advanced.sv (origin: src/cc_stream_register.sv,
@@ -62,8 +61,21 @@ The complete source-to-component disposition is in
 `scripts/check_pulp_manifest.sh`. The reference snapshot is common_cells commit
 63b7c50d43e462b59506f69d341ff1e40202866d (v2.0.0-beta.3).
 
+PULP platform common_cells signal helper material
+--------------------------------------------------
+Origin: https://github.com/pulp-platform/common_cells
+Copyright: 2018-2022 ETH Zurich, University of Bologna, EPFL, and OpenHW Group
+SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+Affected file: rtl/base/signal_helpers.sv
+Origin files: src/cc_read.sv, src/cc_unread.sv
+
+This file has a distinct composite SPDX identifier in its source header. That
+header also retains the upstream Solderpad license notice and URL; the exact
+file header is authoritative for redistribution of this material.
+
 lowRISC register field material
 -------------------------------
 Origin: https://github.com/lowRISC/opentitan
-License: Apache License 2.0
+Copyright: lowRISC contributors
+SPDX-License-Identifier: Apache-2.0
 Affected file: rtl/utils/regfield.sv
