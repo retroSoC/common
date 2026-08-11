@@ -13,7 +13,7 @@ VERIBLE_LINT   ?= verible-verilog-lint
 BUILD_DIR      ?= build
 
 TESTS           := bit_ops gray_code fifo stream stream_control base_ext extended_base stream_extended structures ecc arbiter address cdc cdc_advanced cdc_flush clock memory axi
-VERILATOR_TESTS := $(TESTS) axi_bfm
+VERILATOR_TESTS := $(TESTS) axi_bfm axi_components
 RTL_FILES       := $(shell scripts/rtl_files.sh)
 MAKE_FILES      := $(shell git ls-files --cached --others --exclude-standard | rg '(^|/)(Makefile|[^/]+\.mk)$$' | while IFS= read -r file; do test -f "$$file" && printf '%s\n' "$$file"; done)
 SV_FILES        := $(shell git ls-files --cached --others --exclude-standard | rg '\.sv$$' | while IFS= read -r file; do test -f "$$file" && printf '%s\n' "$$file"; done)
@@ -93,6 +93,11 @@ test-verilator-axi_bfm:
 	@mkdir -p $(BUILD_DIR)/verilator/axi_bfm
 	CCACHE_DISABLE=1 $(VERILATOR) --binary --timing -DSV_ASSRT_DISABLE -Wno-fatal -f flist/rtl.f -f flist/verif.f dv/unit/axi_bfm_tb.sv --top-module axi_bfm_tb --Mdir $(BUILD_DIR)/verilator/axi_bfm
 	$(BUILD_DIR)/verilator/axi_bfm/Vaxi_bfm_tb
+
+test-verilator-axi_components:
+	@mkdir -p $(BUILD_DIR)/verilator/axi_components
+	CCACHE_DISABLE=1 $(VERILATOR) --binary --timing -DSV_ASSRT_DISABLE -Wno-fatal -f flist/rtl.f -f flist/axi4_components.f dv/unit/axi_components_tb.sv --top-module axi_components_tb --Mdir $(BUILD_DIR)/verilator/axi_components
+	$(BUILD_DIR)/verilator/axi_components/Vaxi_components_tb
 
 synth:
 	$(YOSYS) -q -p 'read_verilog -sv rtl/utils/fifo.sv; hierarchy -top fifo; proc; opt; check; stat'

@@ -5,26 +5,27 @@
 
 `include "axi4_define.svh"
 
-module axi4_addr_gen (
-    input  logic [                     7:0] alen_i,
-    input  logic [                     2:0] asize_i,
-    input  logic [                     1:0] aburst_i,
-    input  logic [`AXI4_ADDR_OFT_WIDTH-1:0] addr_i,
-    output logic [`AXI4_ADDR_OFT_WIDTH-1:0] addr_o
+module axi4_addr_gen #(
+    parameter int ADDR_WIDTH = `AXI4_ADDR_OFT_WIDTH
+) (
+    input  logic [           7:0] alen_i,
+    input  logic [           2:0] asize_i,
+    input  logic [           1:0] aburst_i,
+    input  logic [ADDR_WIDTH-1:0] addr_i,
+    output logic [ADDR_WIDTH-1:0] addr_o
 );
-  localparam int OFFSET_WIDTH = `AXI4_ADDR_OFT_WIDTH;
-  logic [OFFSET_WIDTH-1:0] s_beat_bytes;
-  logic [OFFSET_WIDTH-1:0] s_burst_bytes;
-  logic [OFFSET_WIDTH-1:0] s_next_addr;
-  logic [OFFSET_WIDTH-1:0] s_wrap_mask;
-  logic                    s_wrap_length_valid;
+  logic [ADDR_WIDTH-1:0] s_beat_bytes;
+  logic [ADDR_WIDTH-1:0] s_burst_bytes;
+  logic [ADDR_WIDTH-1:0] s_next_addr;
+  logic [ADDR_WIDTH-1:0] s_wrap_mask;
+  logic                  s_wrap_length_valid;
 
   always_comb begin
-    s_beat_bytes = {{(OFFSET_WIDTH - 1) {1'b0}}, 1'b1} << asize_i;
+    s_beat_bytes = {{(ADDR_WIDTH - 1) {1'b0}}, 1'b1} << asize_i;
     s_next_addr = addr_i + s_beat_bytes;
     s_wrap_length_valid = (alen_i == 8'd1) || (alen_i == 8'd3) || (alen_i == 8'd7) ||
         (alen_i == 8'd15);
-    s_burst_bytes = s_beat_bytes * OFFSET_WIDTH'(alen_i + 1'b1);
+    s_burst_bytes = s_beat_bytes * ADDR_WIDTH'(alen_i + 1'b1);
     s_wrap_mask = s_burst_bytes - 1'b1;
 
     case (aburst_i)
@@ -40,5 +41,9 @@ module axi4_addr_gen (
       end
       default:                addr_o = s_next_addr;
     endcase
+  end
+
+  initial begin
+    if (ADDR_WIDTH < 2) $fatal(1, "axi4_addr_gen: ADDR_WIDTH must be at least two");
   end
 endmodule

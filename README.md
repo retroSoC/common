@@ -92,6 +92,7 @@ Each declared RTL unit has a detailed integration page. The catalog is generated
 | [`address_range_decoder`](docs/reference/bus/address_range_decoder.md) | `module` | Inclusive address-range decoder. |
 | [`address_region`](docs/reference/bus/address_region.md) | `module` | Masked address-region matcher. |
 | [`address_set_decoder`](docs/reference/bus/address_set_decoder.md) | `module` | Decoder for a set of independently configured address regions. |
+| [`axi4_regslice`](docs/reference/bus/axi4_regslice.md) | `module` | Elastic register slice for all five AXI4 channels. |
 
 ### `cdc`
 
@@ -153,6 +154,7 @@ Each declared RTL unit has a detailed integration page. The catalog is generated
 | [`apb4_pure_if`](docs/reference/interface/apb4_pure_if.md) | `interface` | Clockless APB4 signal interface with master and slave modports. |
 | [`axi4_addr_gen`](docs/reference/interface/axi4_addr_gen.md) | `module` | AXI4 next-address generator for FIXED, INCR, and legal WRAP bursts. |
 | [`axi4_if`](docs/reference/interface/axi4_if.md) | `interface` | Typed AXI4 interface with master and slave modports. |
+| [`axi4_stream_if`](docs/reference/interface/axi4_stream_if.md) | `interface` | Typed AXI4-Stream interface with source, sink, and monitor modports. |
 | [`ram_if`](docs/reference/interface/ram_if.md) | `interface` | Simple RAM request/response interface with master and slave modports. |
 | [`ready_valid_if`](docs/reference/interface/ready_valid_if.md) | `interface` | Typed ready/valid interface with source, sink, and monitor modports. |
 | [`ribp_if`](docs/reference/interface/ribp_if.md) | `interface` | RIBP request/response interface with response-error signaling. |
@@ -177,6 +179,7 @@ Each declared RTL unit has a detailed integration page. The catalog is generated
 
 | Component | Type | Function summary |
 | --- | --- | --- |
+| [`axi4_stream_regslice`](docs/reference/stream/axi4_stream_regslice.md) | `module` | Elastic AXI4-Stream register slice. |
 | [`bypass_buffer`](docs/reference/stream/bypass_buffer.md) | `module` | Combinational valid/ready stream pass-through. |
 | [`latest_value_stream`](docs/reference/stream/latest_value_stream.md) | `module` | Valid-only stream adapter retaining the newest pending value. |
 | [`memory_response_bridge`](docs/reference/stream/memory_response_bridge.md) | `module` | Response-order bridge between memory and stream interfaces. |

@@ -45,6 +45,9 @@ async_gray_queue\tGray-pointer asynchronous FIFO wrapper.
 async_reqack\tOne-entry four-phase asynchronous data mailbox.
 axi4_addr_gen\tAXI4 next-address generator for FIXED, INCR, and legal WRAP bursts.
 axi4_if\tTyped AXI4 interface with master and slave modports.
+axi4_regslice\tElastic register slice for all five AXI4 channels.
+axi4_stream_if\tTyped AXI4-Stream interface with source, sink, and monitor modports.
+axi4_stream_regslice\tElastic AXI4-Stream register slice.
 bin2gray\tCombinational binary-to-Gray code converter.
 bit_count\tCombinational population-count primitive.
 bypass_buffer\tCombinational valid/ready stream pass-through.
@@ -430,8 +433,8 @@ def main() -> None:
     parser.add_argument("--check", action="store_true", help="report stale generated pages instead of rewriting them")
     args = parser.parse_args()
     units = discover()
-    if len(units) != 147:
-        raise RuntimeError(f"expected 147 declarations, found {len(units)}")
+    if len(units) != 150:
+        raise RuntimeError(f"expected 150 declarations, found {len(units)}")
     missing = sorted(set(unit.name for unit in units) - set(SUMMARIES))
     extras = sorted(set(SUMMARIES) - set(unit.name for unit in units))
     if missing or extras:
