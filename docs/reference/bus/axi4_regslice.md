@@ -12,11 +12,11 @@ Elastic register slice for all five AXI4 channels.
 
 ## Functional Behavior
 
-Elastic register slice for all five AXI4 channels. It classifies the presented address using the configured decode rule and returns the documented selection/match result combinationally.
+Places an independent elastic spill stage on the AXI4 AW, W, B, AR, and R channels. Each channel retains its complete payload while stalled, and `flush_i` discards any locally buffered transfer.
 
 ## Suitable Applications
 
-Use for memory maps, peripheral selection, firewall regions, and target routing.
+Use to break long AXI4 valid, ready, and payload timing paths without coupling the five channels or changing transaction ordering.
 
 ## Parameters
 
@@ -40,11 +40,11 @@ module axi4_regslice #(
     parameter int USER_WIDTH = 1,
     parameter bit BYPASS     = 1'b0
 ) (
-    input logic   clk_i,
-    input logic   rst_n_i,
-    input logic   flush_i,
-          axi4_if slv,
-          axi4_if mst
+    input logic          clk_i,
+    input logic          rst_n_i,
+    input logic          flush_i,
+          axi4_if.slave  slv,
+          axi4_if.master mst
 );
 ```
 
@@ -53,13 +53,13 @@ module axi4_regslice #(
 
 | Signal | Direction | Declaration |
 | --- | --- | --- |
-| `clk_i` | `input` | `input logic   clk_i` |
-| `rst_n_i` | `input` | `input logic   rst_n_i` |
-| `flush_i` | `input` | `input logic   flush_i` |
+| `clk_i` | `input` | `input logic          clk_i` |
+| `rst_n_i` | `input` | `input logic          rst_n_i` |
+| `flush_i` | `input` | `input logic          flush_i` |
 
 ## Integration and Use
 
-Check overlaps and priority deliberately. Decode does not by itself complete or validate a bus transaction.
+Preserve the configured interface widths at both endpoints. Enable `BYPASS` only when empty-state combinational timing is acceptable, and assert `flush_i` only when the surrounding system is permitted to abort buffered traffic.
 
 ```systemverilog
 axi4_regslice #(

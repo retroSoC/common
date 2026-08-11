@@ -187,6 +187,11 @@ xchecker\tSimulation unknown-value checker.
 
 
 DETAILS = {
+    "axi4_regslice": (
+        "Places an independent elastic spill stage on the AXI4 AW, W, B, AR, and R channels. Each channel retains its complete payload while stalled, and `flush_i` discards any locally buffered transfer.",
+        "Use to break long AXI4 valid, ready, and payload timing paths without coupling the five channels or changing transaction ordering.",
+        "Preserve the configured interface widths at both endpoints. Enable `BYPASS` only when empty-state combinational timing is acceptable, and assert `flush_i` only when the surrounding system is permitted to abort buffered traffic.",
+    ),
     "credit_pool": ("Tracks returned (`give_i`) and consumed (`take_i`) credits. Simultaneous give/take has zero net change; full, empty, and one-from-full outputs observe the current state.", "Use for bounded request windows, queue slots, buffer credits, and response throttling.", "Do not issue unpaired gives or takes. `clear_i` is synchronous; choose `EMPTY_ON_RESET` to match resource ownership after reset."),
     "loop_trip_counter": ("Increments by `step_i` on `advance_i`. When the stored value equals `limit_i`, the next advance pulses `wrap_o` and returns the state to zero.", "Use for bounded loops, beat scheduling, table traversal, and phase sequencing.", "A nonzero step must reach the limit exactly. This is not an arbitrary modulo counter; skipping the terminal value is an error."),
     "stable_level_filter": ("Changes the output only after the sampled level differs from the current output for `STABLE_CYCLES` enabled consecutive clocks. `restart_i` accepts the current sample immediately.", "Use for debounced controls, lock indications, slow GPIO state, and reset-status qualification.", "Synchronize an asynchronous source first. Disabling the filter clears accumulated evidence; `STABLE_CYCLES=1` accepts every enabled sample."),

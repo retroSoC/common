@@ -40,11 +40,11 @@ module axi4_stream_regslice #(
     parameter int USER_WIDTH = 1,
     parameter bit BYPASS     = 1'b0
 ) (
-    input logic          clk_i,
-    input logic          rst_n_i,
-    input logic          flush_i,
-          axi4_stream_if sink,
-          axi4_stream_if source
+    input logic                 clk_i,
+    input logic                 rst_n_i,
+    input logic                 flush_i,
+          axi4_stream_if.sink   sink,
+          axi4_stream_if.source source
 );
 ```
 
@@ -53,9 +53,9 @@ module axi4_stream_regslice #(
 
 | Signal | Direction | Declaration |
 | --- | --- | --- |
-| `clk_i` | `input` | `input logic          clk_i` |
-| `rst_n_i` | `input` | `input logic          rst_n_i` |
-| `flush_i` | `input` | `input logic          flush_i` |
+| `clk_i` | `input` | `input logic                 clk_i` |
+| `rst_n_i` | `input` | `input logic                 rst_n_i` |
+| `flush_i` | `input` | `input logic                 flush_i` |
 
 ## Integration and Use
 
