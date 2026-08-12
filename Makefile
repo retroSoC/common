@@ -12,7 +12,7 @@ VERIBLE_FORMAT ?= verible-verilog-format
 VERIBLE_LINT   ?= verible-verilog-lint
 BUILD_DIR      ?= build
 
-TESTS           := bit_ops gray_code fifo stream stream_control base_ext extended_base stream_extended structures ecc arbiter address cdc cdc_advanced cdc_flush clock memory axi
+TESTS           := bit_ops gray_code fifo stream stream_control base_ext extended_base stream_extended structures ecc arbiter address cdc cdc_advanced cdc_flush clock memory axi register
 VERILATOR_TESTS := $(TESTS) axi_bfm axi_components
 RTL_FILES       := $(shell scripts/rtl_files.sh)
 MAKE_FILES      := $(shell git ls-files --cached --others --exclude-standard | rg '(^|/)(Makefile|[^/]+\.mk)$$' | while IFS= read -r file; do test -f "$$file" && printf '%s\n' "$$file"; done)
@@ -99,6 +99,11 @@ test-verilator-axi_components:
 	CCACHE_DISABLE=1 $(VERILATOR) --binary --timing -DSV_ASSRT_DISABLE -Wno-fatal -f flist/rtl.f -f flist/axi4_components.f dv/unit/axi_components_tb.sv --top-module axi_components_tb --Mdir $(BUILD_DIR)/verilator/axi_components
 	$(BUILD_DIR)/verilator/axi_components/Vaxi_components_tb
 
+test-verilator-register:
+	@mkdir -p $(BUILD_DIR)/verilator/register
+	CCACHE_DISABLE=1 $(VERILATOR) --binary --timing -DSV_ASSRT_DISABLE -Wno-fatal -f flist/rtl.f dv/unit/register_tb.sv --top-module register_tb --Mdir $(BUILD_DIR)/verilator/register
+	$(BUILD_DIR)/verilator/register/Vregister_tb
+
 synth:
 	$(YOSYS) -q -p 'read_verilog -sv rtl/utils/fifo.sv; hierarchy -top fifo; proc; opt; check; stat'
 	$(YOSYS) -q -p 'read_verilog -sv rtl/base/bit_ops.sv rtl/stream/round_robin_arbiter.sv; hierarchy -top round_robin_arbiter; proc; opt; check; stat'
@@ -112,6 +117,7 @@ synth:
 	$(YOSYS) -q -p 'read_verilog -Irtl -sv -DSYNTHESIS formal/dffr_model.sv rtl/cdc/cdc_sync.sv rtl/clkrst/rst_sync.sv rtl/cdc/cdc_rst_ctrlr.sv rtl/cdc/async_reqack.sv rtl/cdc/cdc_2phase.sv rtl/cdc/cdc_warm_flush.sv; hierarchy -top cdc_2phase_warm_flush; proc; opt; check; stat'
 
 formal:
+	$(SBY) -f formal/register.sby
 	$(SBY) -f formal/fifo.sby
 	$(SBY) -f formal/arbiter.sby
 	$(SBY) -f formal/async_reqack.sby

@@ -1,0 +1,15 @@
+[options]
+mode prove
+depth 12
+
+[engines]
+smtbmc bitwuzla
+
+[script]
+read -formal -sv -D FORMAL -D SV_ASSRT_DISABLE -I. register.sv register_formal.sv
+prep -top register_formal
+
+[files]
+rtl/utils/register.sv
+rtl/config.svh
+formal/register_formal.sv

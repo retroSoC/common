@@ -31,6 +31,31 @@ has a maintained reference page. See `docs/reference/` for the full catalog,
 `license-check` requires every tracked SystemVerilog source to carry an SPDX
 identifier or an upstream license notice in its first 40 lines.
 
+## Register Primitives
+
+`rtl/utils/register.sv` keeps the existing module names as a compatibility
+surface. Select the primitive by clock edge, reset style, reset value, and
+enable requirement:
+
+| Primitive family | Clock edge | Reset | Enable |
+| --- | --- | --- | --- |
+| `dff` | rising | none | no |
+| `dffl` | rising | none | yes |
+| `dffr`, `dffer` | rising | asynchronous active-low, zero | no / yes |
+| `dffrh`, `dfferh` | rising | asynchronous active-low, all ones | no / yes |
+| `dffrc`, `dfferc` | rising | asynchronous active-low, configurable | no / yes |
+| `dffsr`, `dffesr` | rising | synchronous active-low, zero | no / yes |
+| `dffsrc`, `dffesrc` | rising | synchronous active-low, configurable | no / yes |
+| `ndffr`, `ndffer` | falling | asynchronous active-low, zero | no / yes |
+| `dfferm` | rising | asynchronous active-low, per-array policy | per element |
+
+Reset has priority over enable. A low enable holds the previous value. The
+`dffercn` type-parameterized asynchronous-reset variant remains for existing
+users; new fixed-width code should prefer `dfferc`. Register enable expresses
+data retention semantics. It does not guarantee clock-gate insertion; use the
+Common `clk_icg`/technology ICG wrapper at module level when clock gating is
+required and verify the mapped gate-level netlist.
+
 The repository is licensed under Mulan PSL v2 unless an individual source file
 states another compatible upstream license. Third-party attributions and license
 notices are recorded in `NOTICE` and `licenses/`.
@@ -238,11 +263,13 @@ Each declared RTL unit has a detailed integration page. The catalog is generated
 | [`dfferh`](docs/reference/utils/dfferh.md) | `module` | Enabled D flip-flop with all-one reset value. |
 | [`dfferm`](docs/reference/utils/dfferm.md) | `module` | Masked-update D flip-flop with reset. |
 | [`dffesr`](docs/reference/utils/dffesr.md) | `module` | Enabled D flip-flop with synchronous reset. |
+| [`dffesrc`](docs/reference/utils/dffesrc.md) | `module` | Enabled D flip-flop with synchronous reset and configurable reset value. |
 | [`dffl`](docs/reference/utils/dffl.md) | `module` | Level-sensitive latch primitive. |
 | [`dffr`](docs/reference/utils/dffr.md) | `module` | D flip-flop with asynchronous active-low reset. |
 | [`dffrc`](docs/reference/utils/dffrc.md) | `module` | D flip-flop with configurable reset value. |
 | [`dffrh`](docs/reference/utils/dffrh.md) | `module` | D flip-flop with all-one reset value. |
 | [`dffsr`](docs/reference/utils/dffsr.md) | `module` | D flip-flop with synchronous reset. |
+| [`dffsrc`](docs/reference/utils/dffsrc.md) | `module` | D flip-flop with synchronous reset and configurable reset value. |
 | [`edge_det`](docs/reference/utils/edge_det.md) | `module` | Single-bit rising and falling edge detector. |
 | [`edge_det_fe`](docs/reference/utils/edge_det_fe.md) | `module` | Single-bit falling-edge detector. |
 | [`edge_det_re`](docs/reference/utils/edge_det_re.md) | `module` | Single-bit rising-edge detector. |
@@ -253,6 +280,7 @@ Each declared RTL unit has a detailed integration page. The catalog is generated
 | [`gray2bin`](docs/reference/utils/gray2bin.md) | `module` | Combinational Gray-to-binary code converter. |
 | [`lfsr_fibonacci`](docs/reference/utils/lfsr_fibonacci.md) | `module` | Fibonacci-form pseudo-random linear-feedback shift register. |
 | [`lfsr_galois`](docs/reference/utils/lfsr_galois.md) | `module` | Galois-form pseudo-random linear-feedback shift register. |
+| [`ndffer`](docs/reference/utils/ndffer.md) | `module` | Enabled D flip-flop with falling-edge clock and asynchronous reset. |
 | [`ndffr`](docs/reference/utils/ndffr.md) | `module` | Resettable multi-stage synchronizer register chain. |
 | [`regfield`](docs/reference/utils/regfield.md) | `module` | Masked register-field update primitive. |
 | [`shift_reg`](docs/reference/utils/shift_reg.md) | `module` | Parameterized sequential shift register. |

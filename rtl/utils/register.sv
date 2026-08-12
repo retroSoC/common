@@ -59,6 +59,39 @@ module ndffr #(
   end
 endmodule
 
+module ndffer #(
+    parameter int DATA_WIDTH = 1
+) (
+    input  logic                  clk_i,
+    input  logic                  rst_n_i,
+    input  logic                  en_i,
+    input  logic [DATA_WIDTH-1:0] dat_i,
+    output logic [DATA_WIDTH-1:0] dat_o
+);
+
+  always_ff @(negedge clk_i, negedge rst_n_i) begin
+    if (~rst_n_i) begin
+      dat_o <= '0;
+    end else if (en_i) begin
+      dat_o <= dat_i;
+    end
+  end
+
+`ifndef SV_ASSRT_DISABLE
+  xchecker #(
+      .DATA_WIDTH(1)
+  ) u_xchecker (
+      clk_i,
+      en_i
+  );
+`endif
+
+  initial begin
+    if (DATA_WIDTH < 1) $fatal(1, "ndffer: DATA_WIDTH must be positive");
+  end
+
+endmodule
+
 module dffrh #(
     parameter int DATA_WIDTH = 1
 ) (
@@ -111,6 +144,29 @@ module dffsr #(
     end else begin
       dat_o <= dat_i;
     end
+  end
+endmodule
+
+module dffsrc #(
+    parameter int                    DATA_WIDTH = 1,
+    parameter logic [DATA_WIDTH-1:0] RESET_VAL  = '0
+) (
+    input  logic                  clk_i,
+    input  logic                  rst_n_i,
+    input  logic [DATA_WIDTH-1:0] dat_i,
+    output logic [DATA_WIDTH-1:0] dat_o
+);
+
+  always_ff @(posedge clk_i) begin
+    if (~rst_n_i) begin
+      dat_o <= RESET_VAL;
+    end else begin
+      dat_o <= dat_i;
+    end
+  end
+
+  initial begin
+    if (DATA_WIDTH < 1) $fatal(1, "dffsrc: DATA_WIDTH must be positive");
   end
 endmodule
 
@@ -228,6 +284,7 @@ module dfferc #(
 
 endmodule
 
+`ifndef FORMAL
 module dffercn #(
     parameter type     REG_TYPE  = logic,
     parameter REG_TYPE RESET_VAL = '0
@@ -257,6 +314,7 @@ module dffercn #(
 `endif
 
 endmodule
+`endif
 
 module dffesr #(
     parameter int DATA_WIDTH = 1
@@ -287,6 +345,41 @@ module dffesr #(
 
 endmodule
 
+module dffesrc #(
+    parameter int                    DATA_WIDTH = 1,
+    parameter logic [DATA_WIDTH-1:0] RESET_VAL  = '0
+) (
+    input  logic                  clk_i,
+    input  logic                  rst_n_i,
+    input  logic                  en_i,
+    input  logic [DATA_WIDTH-1:0] dat_i,
+    output logic [DATA_WIDTH-1:0] dat_o
+);
+
+  always_ff @(posedge clk_i) begin
+    if (~rst_n_i) begin
+      dat_o <= RESET_VAL;
+    end else if (en_i) begin
+      dat_o <= dat_i;
+    end
+  end
+
+`ifndef SV_ASSRT_DISABLE
+  xchecker #(
+      .DATA_WIDTH(1)
+  ) u_xchecker (
+      clk_i,
+      en_i
+  );
+`endif
+
+  initial begin
+    if (DATA_WIDTH < 1) $fatal(1, "dffesrc: DATA_WIDTH must be positive");
+  end
+
+endmodule
+
+`ifndef FORMAL
 module dfferm #(
     parameter int                  DATA_NUM   = 2,
     parameter int                  DATA_WIDTH = 1,
@@ -329,3 +422,4 @@ module dfferm #(
   end
 
 endmodule
+`endif

@@ -92,6 +92,9 @@ dfferc\tEnabled D flip-flop with configurable reset value.
 dffercn\tEnabled D flip-flop with active-low configurable reset value.
 dfferh\tEnabled D flip-flop with all-one reset value.
 dfferm\tMasked-update D flip-flop with reset.
+ndffer\tEnabled D flip-flop with falling-edge clock and asynchronous reset.
+dffsrc\tD flip-flop with synchronous reset and configurable reset value.
+dffesrc\tEnabled D flip-flop with synchronous reset and configurable reset value.
 dffesr\tEnabled D flip-flop with synchronous reset.
 dffl\tLevel-sensitive latch primitive.
 dffr\tD flip-flop with asynchronous active-low reset.
@@ -187,6 +190,9 @@ xchecker\tSimulation unknown-value checker.
 
 
 DETAILS = {
+    "ndffer": ("Samples `dat_i` on the falling edge of `clk_i` when `en_i` is high and asynchronously clears the output to zero when `rst_n_i` is low.", "Use for falling-edge state machines, phase-aligned control, or interfaces that intentionally sample on the opposite clock edge.", "Use only when the falling-edge timing domain is explicit. `rst_n_i` has priority over `en_i`, and stalled enable retains the previous value."),
+    "dffsrc": ("Samples `dat_i` on the rising edge of `clk_i`; when `rst_n_i` is low at that edge, the output takes `RESET_VAL`.", "Use for synchronous-reset state or configuration registers that require a nonzero reset value.", "The reset is synchronous: changing `rst_n_i` between clock edges does not change the output."),
+    "dffesrc": ("Samples `dat_i` on the rising edge of `clk_i` only when `en_i` is high; a low `rst_n_i` at that edge takes `RESET_VAL`.", "Use for conditionally updated state with synchronous reset and a specified reset value.", "Reset has priority over enable. When reset is inactive and enable is low, the output retains its prior value."),
     "axi4_regslice": (
         "Places an independent elastic spill stage on the AXI4 AW, W, B, AR, and R channels. Each channel retains its complete payload while stalled, and `flush_i` discards any locally buffered transfer.",
         "Use to break long AXI4 valid, ready, and payload timing paths without coupling the five channels or changing transaction ordering.",
@@ -438,8 +444,8 @@ def main() -> None:
     parser.add_argument("--check", action="store_true", help="report stale generated pages instead of rewriting them")
     args = parser.parse_args()
     units = discover()
-    if len(units) != 150:
-        raise RuntimeError(f"expected 150 declarations, found {len(units)}")
+    if len(units) != 153:
+        raise RuntimeError(f"expected 153 declarations, found {len(units)}")
     missing = sorted(set(unit.name for unit in units) - set(SUMMARIES))
     extras = sorted(set(SUMMARIES) - set(unit.name for unit in units))
     if missing or extras:
