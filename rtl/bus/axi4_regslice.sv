@@ -1,6 +1,8 @@
 // Copyright (c) 2026 Yuchi Miao <miaoyuchi@ict.ac.cn>
 // SPDX-License-Identifier: MulanPSL-2.0
 
+// Elastic register slice for all five independent AXI4 channels.
+// flush_i cancels buffered transactions without creating a handshake.
 module axi4_regslice #(
     parameter int ADDR_WIDTH = 32,
     parameter int DATA_WIDTH = 32,

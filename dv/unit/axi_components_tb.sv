@@ -4,6 +4,7 @@
 module axi_components_tb;
   logic clk = 1'b0;
   logic rst_n = 1'b0;
+  logic flush = 1'b0;
 
   axi4_if #(
       .ADDR_WIDTH(32),
@@ -47,7 +48,7 @@ module axi_components_tb;
   axi4_regslice u_axi4_regslice (
       .clk_i  (clk),
       .rst_n_i(rst_n),
-      .flush_i(1'b0),
+      .flush_i(flush),
       .slv    (slv_axi),
       .mst    (mst_axi)
   );
@@ -152,6 +153,17 @@ module axi_components_tb;
     @(negedge clk);
     mst_axi.arready = 1'b1;
     @(posedge clk);
+
+    @(negedge clk);
+    flush           = 1'b1;
+    slv_axi.arvalid = 1'b1;
+    #1;
+    if (slv_axi.arready || mst_axi.arvalid) begin
+      $fatal(1, "AXI4 register slice accepted traffic during flush");
+    end
+    @(negedge clk);
+    flush           = 1'b0;
+    slv_axi.arvalid = 1'b0;
 
     $display("[PASS] axi_components_tb");
     $finish;
